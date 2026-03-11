@@ -1,0 +1,18 @@
+@import "tailwindcss";
+/* index.css */
+/* index.css */
+@layer base {
+  html, body {
+    cursor: none;
+  }
+
+  /* Restore the default text cursor only when an input is focused */
+  input:focus, textarea:focus {
+    cursor: text !important;
+  }
+
+  /* Keep buttons and links "cursor-less" since the CustomCursor handles them */
+  button, a {
+    cursor: none !important;
+  }
+}

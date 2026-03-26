@@ -3,7 +3,8 @@ import Login from "./pages/Login.jsx"
 import Register from "./pages/Register.jsx"
 import Cursor from "./components/Cursor.jsx"
 import Dashboard from "./pages/Dashboard.jsx"
-
+import Sidebar from "./components/Sidebar.jsx"
+import DashboardLayout from './layouts/DashboardLayout.jsx'
 function App() {
   return (
     <>
@@ -16,8 +17,18 @@ function App() {
 
       <Route path="/register" element={<Register />} />
 
-      <Route path="/dashboard" element={< Dashboard/>}/>
+     <Route
+  path="/dashboard"
+  element={
+    <DashboardLayout>
+      <Dashboard />
+    </DashboardLayout>
+  }
+/>
+
     </Routes>
+
+
     </>
   )
 }

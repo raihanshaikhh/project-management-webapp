@@ -1,7 +1,5 @@
-import { useUser } from "@clerk/clerk-react"
-import { UserButton } from "@clerk/clerk-react"
 
-const user = useUser()
+
 
 
 
@@ -52,9 +50,9 @@ function Dashboard() {
   return (
     <div className="min-h-full bg-[#212322] p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-[#F4F5EF]"> Welcome, {user?.firstName || "User"}</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-[#F4F5EF]"> Welcome,</h1>
         <p className="text-sm text-[#2092EA] mt-1">Overview of projects, tasks, and team activity</p>
-        <UserButton afterSignOutUrl="/login" />
+        
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">

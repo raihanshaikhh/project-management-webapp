@@ -23,7 +23,7 @@ export default function Register({ form, onChange, onSwitch }) {
     setLoading(true);
     try {
       const res = await API.post("/auth/register", {
-        name: form.name,
+        username: form.name,
         email: form.email,
         password: form.password,
       });

@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Auth from "./pages/Auth.jsx";
-import Sidebar from "./components/auth/layout/Sidebar.jsx";
+import Sidebar from "./components/layout/Sidebar.jsx";
 function App() {
 
 

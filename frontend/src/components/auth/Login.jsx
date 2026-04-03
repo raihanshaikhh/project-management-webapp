@@ -26,7 +26,7 @@ export default function Login({ form, onChange, onSwitch }) {
         password: form.password,
       });
       localStorage.setItem("token", res.data.token);
-      navigate("/dashboard");
+      navigate("/sidebar");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {

@@ -32,7 +32,7 @@ export default function Register({ form, onChange, onSwitch }) {
     return;
   }
       localStorage.setItem("token", res.data.token);
-      navigate("/dashboard");
+      navigate("/app/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {

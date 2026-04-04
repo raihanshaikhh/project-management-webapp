@@ -77,22 +77,44 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`bg-zinc-950 min-h-screen flex flex-col transition-all duration-300 ${
-        isOpen ? 'w-64' : 'w-0'
+      className={`bg-zinc-950 min-h-screen flex flex-col transition-all duration-500 ${
+        isOpen ? 'w-64' : 'w-[60px]'
       }`}
     >
       {/* ── Toggle button — always visible, nothing else when collapsed ── */}
       <div className="flex items-center justify-start p-3">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="text-zinc-400 hover:text-white hover:bg-zinc-800 p-1.5 rounded-md transition-colors"
+          className="text-zinc-400 hover:text-white hover:bg-zinc-800 p-1.5 rounded-md transition-colors cursor-pointer"
           aria-label="Toggle sidebar"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="6"  x2="21" y2="6"/>
-            <line x1="3" y1="12" x2="21" y2="12"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
+          {isOpen ? ( <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="6" y1="18" x2="18" y2="6" />
+      </svg>):(<svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>)}
+         
         </button>
       </div>
 

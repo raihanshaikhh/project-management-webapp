@@ -4,7 +4,7 @@ const DashboardLayout = () => {
   return (
     <div className="flex">
       <Sidebar />
-      <div className="flex-1">
+      <div className="flex-1 bg-[#F8FAFC]">
         <Outlet />
       </div>
     </div>

@@ -77,7 +77,7 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`bg-zinc-950 min-h-screen flex flex-col transition-all duration-500 ${
+      className={`bg-[#0F172A] min-h-screen flex flex-col transition-all duration-500 text-slate-400 ${
         isOpen ? 'w-64' : 'w-[60px]'
       }`}
     >
@@ -85,7 +85,7 @@ export default function Sidebar() {
       <div className="flex items-center justify-start p-3">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="text-zinc-400 hover:text-white hover:bg-zinc-800 p-1.5 rounded-md transition-colors cursor-pointer"
+          className=" hover:text-white hover:bg-zinc-800 p-1.5 rounded-md transition-colors cursor-pointer"
           aria-label="Toggle sidebar"
         >
           {isOpen ? ( <svg
@@ -126,8 +126,8 @@ export default function Sidebar() {
           </div>
 
           {/* Main nav */}
-          <div className="mt-4 px-2 flex flex-col gap-0.5">
-            <p className="text-zinc-600 text-[10px] font-medium uppercase tracking-widest px-2 mb-1">
+          <div className="mt-4 px-2 flex flex-col gap-0.5 text-slate-400">
+            <p className="text-[15px] font-medium uppercase tracking-widest px-2 mb-1">
               Main
             </p>
             {NAV_ITEMS.map(({ label, icon, badge }) => (
@@ -156,7 +156,7 @@ export default function Sidebar() {
           {/* Projects */}
           <div className="px-2 flex flex-col gap-0.5 flex-1 overflow-y-auto">
             <div className="flex items-center justify-between px-2 mb-1">
-              <p className="text-zinc-600 text-[10px] font-medium uppercase tracking-widest">
+              <p className=" text-[10px] font-medium uppercase tracking-widest">
                 Projects
               </p>
               <button

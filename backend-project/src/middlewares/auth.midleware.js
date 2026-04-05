@@ -11,6 +11,7 @@ import {ProjectMember} from "../models/projectMember.model.js"
 import asyncHandler from "../utils/asyn-handler.js"
 import mongoose from "mongoose"
 export const verifyJWT = asyncHandler(async (req, res, next) => {
+  
   const authHeader = req.headers.authorization
   const token =
     req.cookies?.accessToken ||

@@ -4,9 +4,9 @@ const DashboardLayout = () => {
   return (
     <div className="flex">
       <Sidebar />
-      <div className="flex-1 bg-[#F8FAFC]">
+      <main className="flex-1 bg-zinc-950 p-6">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 };

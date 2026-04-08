@@ -73,7 +73,7 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="p-8 bg-zinc-950 min-h-screen text-zinc-300">
+    <>
 
       {/* Greeting */}
       <div className="mb-10">
@@ -197,7 +197,7 @@ const Dashboard = () => {
         </div>
 
       </div>
-    </div>
+    </>
   );
 };
 

@@ -8,8 +8,7 @@ const Columns = [
 
 const Tasks = [
   { id: 1, title: "Fix login bug", project: "Mobile App v2", status: "in-progress", due: "Apr 6" },
-  { id: 2, title: "Review PR 42", project: "Website Redesign", status: "todo", due: "Apr 7" },
-  
+  { id: 2, title: "Review PR #42", project: "Website Redesign", status: "todo", due: "Apr 7" },
 ];
 
 

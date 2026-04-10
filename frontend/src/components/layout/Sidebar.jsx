@@ -80,7 +80,7 @@ const navClass = ({ isActive }) =>
   `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
     isActive
       ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-      : 'text-slate-400 hover:bg-zinc-800/60 hover:text-zinc-100'
+      : 'text-slate-400 hover:bg-blue-950 hover:text-zinc-100'
   }`;
 
 export default function Sidebar() {
@@ -96,7 +96,7 @@ export default function Sidebar() {
       <div className="flex items-center justify-start p-3">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="hover:text-white hover:bg-zinc-800 p-1.5 rounded-md transition-colors cursor-pointer"
+          className="hover:text-white hover:bg-blue-950 p-1.5 rounded-md transition-colors cursor-pointer"
           aria-label="Toggle sidebar"
         >
           {isOpen ? (
@@ -120,7 +120,7 @@ export default function Sidebar() {
 
           {/* Main nav */}
           <div className="mt-4 px-2 flex flex-col gap-0.5">
-            <p className="text-[10px] font-medium uppercase tracking-widest px-2 mb-1 text-zinc-600">
+            <p className="text-[10px] font-medium uppercase tracking-widest px-2 mb-1 text-zinc-300">
               Main
             </p>
             {NAV_ITEMS.map(({ label, icon, badge, path }) => (
@@ -141,7 +141,7 @@ export default function Sidebar() {
           {/* Projects */}
           <div className="px-2 flex flex-col gap-0.5 flex-1 overflow-y-auto">
             <div className="flex items-center justify-between px-2 mb-1">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-zinc-600">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-zinc-300">
                 Projects
               </p>
               <button
@@ -156,7 +156,7 @@ export default function Sidebar() {
             {PROJECTS.map(({ name, color }) => (
               <button
                 key={name}
-                className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-md text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-md text-sm text-zinc-400 hover:bg-blue-950 hover:text-white transition-colors"
               >
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
                 <span className="truncate">{name}</span>
@@ -177,7 +177,7 @@ export default function Sidebar() {
           </div>
 
           {/* User row */}
-          <div className="mx-2 mt-2 mb-3 p-2 rounded-md flex items-center gap-3 hover:bg-zinc-800 cursor-pointer transition-colors">
+          <div className="mx-2 mt-2 mb-3 p-2 rounded-md flex items-center gap-3 hover:bg-blue-950 cursor-pointer transition-colors">
             <div className="w-7 h-7 rounded-full bg-blue-600/25 flex items-center justify-center text-blue-400 text-xs font-medium shrink-0">
               RH
             </div>

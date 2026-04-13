@@ -1,26 +1,18 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AUTH_KEYFRAMES, BgTile } from "../components/auth/Authcomponents.jsx";
 import Login    from "../components/auth/Login.jsx";
 import Register from "../components/auth/Register.jsx";
 
-// Card heights in px — register is taller due to extra fields
 const LOGIN_H    = 480;
 const REGISTER_H = 572;
 
-/**
- * Auth  (pages/Auth.jsx)
- *
- * Layout page. Owns:
- *   - flipped state  (which face is showing)
- *   - shared form state
- *   - animated background (dot grid, glow, floating tiles)
- *   - the 3-D flip wrapper
- *
- * Login and Register are purely presentational — they receive
- * form, onChange, and onSwitch as props and render one card face each.
- */
 export default function Auth() {
-  const [flipped, setFlipped] = useState(false); // false = login, true = register
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isLogin = location.pathname === "/sign-in"; // ← replaces `flipped`
+
   const [form,    setForm   ] = useState({ name: "", email: "", password: "", confirm: "" });
   const [visible, setVisible] = useState(false);
 
@@ -29,11 +21,10 @@ export default function Auth() {
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const cardHeight = flipped ? REGISTER_H : LOGIN_H;
+  const cardHeight = isLogin ? LOGIN_H : REGISTER_H;
 
   return (
     <>
-      {/* Keyframes + Google Fonts — injected once here so children stay clean */}
       <style>{AUTH_KEYFRAMES}</style>
 
       <div className="font-outfit min-h-screen bg-[#060a0e] flex items-center justify-center relative overflow-hidden">
@@ -44,7 +35,7 @@ export default function Auth() {
           style={{ background: "radial-gradient(circle, rgba(22,163,74,0.07) 0%, transparent 65%)" }}
         />
 
-        {/* ── Dot grid (masked to center) ── */}
+        {/* ── Dot grid ── */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -104,13 +95,10 @@ export default function Auth() {
           </div>
         </BgTile>
 
-        {/* ════════════════════════════════════════
-            3-D flip container
-            ════════════════════════════════════════ */}
+        {/* ── Flip container ── */}
         <div
           className={`flip-wrapper w-[388px] transition-[opacity,transform] duration-500 ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
         >
-          {/* Height shell — smoothly grows when switching to register */}
           <div
             className="relative"
             style={{
@@ -118,19 +106,18 @@ export default function Auth() {
               transition: "height 0.65s cubic-bezier(0.4,0,0.2,1)",
             }}
           >
-            {/* The element that actually rotates */}
-            <div className={`flip-inner absolute inset-0 ${flipped ? "flipped" : ""}`}>
+            <div className={`flip-inner absolute inset-0 ${!isLogin ? "flipped" : ""}`}>
 
               <Login
                 form={form}
                 onChange={handleChange}
-                onSwitch={() => setFlipped(true)}
+                onSwitch={() => navigate("/sign-up")}
               />
 
               <Register
                 form={form}
                 onChange={handleChange}
-                onSwitch={() => setFlipped(false)}
+                onSwitch={() => navigate("/sign-in")}
               />
 
             </div>

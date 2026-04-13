@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+
 const app = express()
 
 
@@ -22,9 +23,11 @@ app.use(cors({
 import  healthCheckRouter  from './routes/healthcheck.route.js'
 import authRouter from "./routes/authUser.route.js"
 import projectRouter from "./routes/projects.routes.js"
+import dashboardRoutes from "./routes/dashboard.route.js";
 app.use("/api/v1/healthcheck", healthCheckRouter)
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/projects", projectRouter)
+app.use("/api/v1/dashboard", dashboardRoutes);
 import taskRoutes from "./routes/task.route.js"
 
 app.use("/api/v1", taskRoutes)

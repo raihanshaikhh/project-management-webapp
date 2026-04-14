@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrandHeader } from '../auth/Authcomponents.jsx';
 import { NavLink } from 'react-router-dom';
+import ProjectsList from '../../pages/ProjectsList.jsx';
 
 const NAV_ITEMS = [
   {
@@ -43,14 +44,6 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
-];
-
-const PROJECTS = [
-  { name: 'Website Redesign', color: '#378ADD' },
-  { name: 'Mobile App v2',    color: '#1D9E75' },
-  { name: 'Q3 Marketing',     color: '#D85A30' },
-  { name: 'API Integration',  color: '#D4537E' },
-  { name: 'Design System',    color: '#BA7517' },
 ];
 
 const BOTTOM_ITEMS = [
@@ -138,30 +131,10 @@ export default function Sidebar() {
 
           <div className="mx-3 my-3 border-t border-zinc-800" />
 
-          {/* Projects */}
-          <div className="px-2 flex flex-col gap-0.5 flex-1 overflow-y-auto">
-            <div className="flex items-center justify-between px-2 mb-1">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-zinc-300">
-                Projects
-              </p>
-              <button
-                className="text-zinc-600 hover:text-white p-0.5 rounded transition-colors"
-                title="New project"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-              </button>
-            </div>
-            {PROJECTS.map(({ name, color }) => (
-              <button
-                key={name}
-                className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-md text-sm text-zinc-400 hover:bg-blue-950 hover:text-white transition-colors"
-              >
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
-                <span className="truncate">{name}</span>
-              </button>
-            ))}
+          {/* Projects — now fully dynamic via ProjectsContext */}
+          <div className="px-2 flex-1 overflow-y-auto">
+           
+            <ProjectsList />
           </div>
 
           <div className="mx-3 my-3 border-t border-zinc-800" />

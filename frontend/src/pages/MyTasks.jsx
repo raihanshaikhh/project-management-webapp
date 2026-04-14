@@ -1,14 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import API from "../services/Api.js"
 
-const INITIAL_TASKS = [
-  { id: "1", title: "Fix login bug", project: "Mobile App v2", projectColor: "#1D9E75", status: "todo", priority: "High", due: "Apr 6", comments: 3, assignees: ["RH", "AM"] },
-  { id: "2", title: "Review PR #42", project: "Website Redesign", projectColor: "#378ADD", status: "todo", priority: "Medium", due: "Apr 7", comments: 1, assignees: ["RH"] },
-  { id: "3", title: "Write API endpoint docs", project: "API Integration", projectColor: "#D4537E", status: "todo", priority: "Low", due: "Apr 8", comments: 2, assignees: ["SP"] },
-  { id: "4", title: "Redesign landing page", project: "Website Redesign", projectColor: "#378ADD", status: "todo", priority: "High", due: "Apr 10", comments: 5, assignees: ["RH", "SP", "AM"] },
-  { id: "5", title: "Integrate Stripe API", project: "API Integration", projectColor: "#D4537E", status: "doing", priority: "High", due: "Apr 9", comments: 4, assignees: ["RH", "AM"] },
-  
-];
+
 
 const COLUMNS = [
   { id: "todo", label: "To do", accent: "#378ADD" },
@@ -240,8 +234,44 @@ const Column = ({ col, tasks, setTasks }) => {
 };
 
 export default function MyTasks() {
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [tasks, setTasks] = useState([]);
   const [search, setSearch] = useState("");
+   useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await API.get("/dashboard", {
+          withCredentials: true,
+        });
+
+        const rawTasks = res.data.data.myTasks;
+
+        const formatted = rawTasks.map((t) => ({
+          id: t._id,
+          title: t.title,
+          project: t.project?.name || "No Project",
+          projectColor: "#378ADD",
+          status:
+            t.status === "To Do"
+              ? "todo"
+              : t.status === "In Progress"
+              ? "doing"
+              : "done",
+          priority: "Medium",
+          due: t.dueDate
+            ? new Date(t.dueDate).toLocaleDateString()
+            : "No date",
+          comments: 0,
+          assignees: ["ME"],
+        }));
+
+        setTasks(formatted);
+      } catch (err) {
+        console.error("Failed to fetch tasks", err);
+      }
+    };
+
+    fetchTasks();
+  }, []);
 
   const filtered = search.trim()
     ? tasks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()))

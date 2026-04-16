@@ -5,79 +5,88 @@ import {
   updateProject  as apiUpdateProject,
   deleteProject  as apiDeleteProject,
 } from '../services/Api.js';
-const DEFAULT_PROJECTS = [
-  { id: '1', name: 'Website Redesign', color: '#378ADD' },
-  { id: '2', name: 'Mobile App v2',    color: '#1D9E75' },
-  { id: '3', name: 'Q3 Marketing',     color: '#D85A30' },
-  { id: '4', name: 'API Integration',  color: '#D4537E' },
-  { id: '5', name: 'Design System',    color: '#BA7517' },
-];
 
 const ProjectsContext = createContext(null);
 
 export function ProjectsProvider({ children }) {
-  const [projects, setProjects]   = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(null);
+  const [projects, setProjects]           = useState([]);
+  const [loading, setLoading]             = useState(true);
+  const [error, setError]                 = useState(null);
+  const [activeProject, setActiveProject] = useState(null);
 
-    useEffect(() => {
+  useEffect(() => {
     const loadProjects = async () => {
       try {
         setLoading(true);
-        const res = await fetchProjects();
-        // your backend returns: [{ project: {...}, role: "..." }, ...]
-        // we pull out the nested project object from each entry
+        const res  = await fetchProjects();
         const list = res.data.data.map((entry) => entry.project);
         setProjects(list);
+
+        // auto-select the first project so MyTasks always has something to show
+        if (list.length > 0) setActiveProject(list[0]);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load projects");
+        setError(err.response?.data?.message || 'Failed to load projects');
       } finally {
         setLoading(false);
       }
     };
-
     loadProjects();
   }, []);
 
-
   const addProject = async (name, description = '') => {
     try {
-      const res = await apiCreateProject(name, description);
-      const newProject = res.data.data; // backend returns the created project
+      const res        = await apiCreateProject(name, description);
+      const newProject = res.data.data;
       setProjects((prev) => [...prev, newProject]);
       return newProject;
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create project");
-      throw err; // so the form can catch it too if needed
-    }
-  };
-  const removeProject = async (projectId) => {
-    try {
-      await apiDeleteProject(projectId);
-      setProjects((prev) => prev.filter((p) => p._id !== projectId));
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete project");
+      setError(err.response?.data?.message || 'Failed to create project');
       throw err;
     }
   };
 
- const updateProject = async (projectId, name, description) => {
+  const removeProject = async (projectId) => {
     try {
-      const res = await apiUpdateProject(projectId, name, description);
+      await apiDeleteProject(projectId);
+      setProjects((prev) => {
+        const updated = prev.filter((p) => p._id !== projectId);
+        // if the deleted one was active, fall back to the first remaining
+        if (activeProject?._id === projectId) {
+          setActiveProject(updated[0] ?? null);
+        }
+        return updated;
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete project');
+      throw err;
+    }
+  };
+
+  const updateProject = async (projectId, name, description) => {
+    try {
+      const res     = await apiUpdateProject(projectId, name, description);
       const updated = res.data.data;
-      setProjects((prev) =>
-        prev.map((p) => (p._id === projectId ? updated : p))
-      );
+      setProjects((prev) => prev.map((p) => (p._id === projectId ? updated : p)));
+      if (activeProject?._id === projectId) setActiveProject(updated);
       return updated;
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update project");
+      setError(err.response?.data?.message || 'Failed to update project');
       throw err;
     }
   };
 
   return (
     <ProjectsContext.Provider
-      value={{ projects, loading, error, addProject, removeProject, updateProject }}
+      value={{
+        projects,
+        loading,
+        error,
+        activeProject,
+        setActiveProject,
+        addProject,
+        removeProject,
+        updateProject,
+      }}
     >
       {children}
     </ProjectsContext.Provider>

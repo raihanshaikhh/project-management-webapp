@@ -55,7 +55,7 @@ const getProject = asyncHandler(async (req, res) => {
       }
     }
   ])
-  console.log(JSON.stringify(project, null, 2))
+
 
   return res
     .status(200)

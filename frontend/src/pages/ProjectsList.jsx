@@ -26,22 +26,25 @@ export default function ProjectsList({ compact = false }) {
   const [newDescription, setNewDescription] = useState('');
   const [toast, setToast] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
-  const handleDelete = (_id) => {
-    const deletedProject = projects.find(p => p._id === _id);
+  const [lastDeleted, setLastDeleted] = useState(null);
 
-    removeProject(_id);
+ const handleDelete = (_id) => {
+  const deletedProject = projects.find(p => p._id === _id);
 
-    setToast({
-      message: "Project deleted",
-      undo: () => addProject(deletedProject.name, deletedProject.description).then((res) => {      // we need to restore the deleted project with its original ID for the UI to update correctly
-        const restored = { ...res, _id: deletedProject._id };
-        addProject((prev) => [...prev, restored]);
-      }
-      )
-    });
+  removeProject(_id);
 
-    setTimeout(() => setToast(null), 5000);
-  };
+  setToast({
+    message: "Project deleted",
+   undo: () => {
+  if (lastDeleted) {
+    addProject(lastDeleted.name, lastDeleted.description, lastDeleted.color);
+  }
+  setLastDeleted(deletedProject);
+}
+  });
+
+  setTimeout(() => setToast(null), 5000);
+};
   const handleAdd = () => {
     const trimmed = newName.trim();
     if (!trimmed) return;

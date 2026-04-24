@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchTasks, updateTask } from "../services/Api.js";
+import { fetchTasks, updateTask, createTask } from "../services/Api.js";
 import { useProjects } from "../context/Projectscontext.jsx";
+import TaskModal from "../components/TaskModal.jsx";
 
 const COLUMNS = [
-  { id: "todo",  label: "To do",       accent: "#378ADD" },
+  { id: "todo", label: "To do", accent: "#378ADD" },
   { id: "doing", label: "In Progress", accent: "#EF9F27" },
-  { id: "done",  label: "Done",        accent: "#1D9E75" },
+  { id: "done", label: "Done", accent: "#1D9E75" },
 ];
 
 const AVATAR_COLORS = {
@@ -15,19 +16,19 @@ const AVATAR_COLORS = {
   SP: "bg-amber-600/30 text-amber-400",
 };
 
-const toColumnId      = (s) => s === "in_progress" ? "doing" : s === "done" ? "done" : "todo";
+const toColumnId = (s) => s === "in_progress" ? "doing" : s === "done" ? "done" : "todo";
 const toBackendStatus = (c) => c === "doing" ? "in_progress" : c === "done" ? "done" : "todo";
 
 const formatTask = (t, projectName, projectColor) => ({
-  id:           t._id,
-  title:        t.title,
-  project:      projectName,
+  id: t._id,
+  title: t.title,
+  project: projectName,
   projectColor: projectColor ?? "#378ADD",
-  status:       toColumnId(t.status),
-  priority:     t.priority || "Medium",
-  due:          t.dueDate ? new Date(t.dueDate).toLocaleDateString() : "No date",
-  comments:     0,
-  assignees:    t.assignedTo
+  status: toColumnId(t.status),
+  priority: t.priority || "Medium",
+  due: t.dueDate ? new Date(t.dueDate).toLocaleDateString() : "No date",
+  comments: 0,
+  assignees: t.assignedTo
     ? [t.assignedTo.username?.slice(0, 2).toUpperCase() ?? "ME"]
     : ["ME"],
 });
@@ -35,8 +36,8 @@ const formatTask = (t, projectName, projectColor) => ({
 // ── Project Dropdown ──────────────────────────────────────────────────────────
 const ProjectDropdown = ({ projects, activeProject, onSelect }) => {
   const [open, setOpen] = useState(false);
-  const ref             = useRef(null);
-
+  const ref = useRef(null);
+  
   // close on outside click
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -80,8 +81,8 @@ const ProjectDropdown = ({ projects, activeProject, onSelect }) => {
         {open && (
           <motion.div
             initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0,  scale: 1    }}
-            exit={{    opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full mt-1.5 z-50 w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl shadow-black/40 overflow-hidden"
           >
@@ -157,11 +158,10 @@ const TaskCard = ({ task, handleDragStart }) => {
         className="group bg-zinc-900/80 backdrop-blur border border-zinc-800/50 rounded-xl overflow-hidden hover:border-zinc-500 hover:shadow-lg hover:shadow-black/20 transition-colors cursor-grab active:cursor-grabbing"
       >
         <div className="p-3 flex flex-col gap-3">
-          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium w-fit ${
-            task.priority === "High"   ? "bg-red-500/20 text-red-400" :
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium w-fit ${task.priority === "High" ? "bg-red-500/20 text-red-400" :
             task.priority === "Medium" ? "bg-yellow-500/20 text-yellow-400" :
-                                         "bg-emerald-500/20 text-emerald-400"
-          }`}>
+              "bg-emerald-500/20 text-emerald-400"
+            }`}>
             {task.priority === "High" ? "Urgent" : task.priority === "Medium" ? "Important" : "Normal"}
           </span>
           <p className={`text-sm leading-snug ${done ? "line-through text-zinc-600" : "text-zinc-100"}`}>
@@ -175,7 +175,7 @@ const TaskCard = ({ task, handleDragStart }) => {
             <div className="flex items-center gap-3 text-zinc-500">
               <div className="flex items-center gap-1">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                 </svg>
                 <span className="text-[11px]">{task.comments}</span>
               </div>
@@ -189,19 +189,19 @@ const TaskCard = ({ task, handleDragStart }) => {
   );
 };
 
-const Column = ({ col, tasks, setTasks }) => {
+const Column = ({ col, tasks, setTasks, openModal }) => {
   const [active, setActive] = useState(false);
   const colTasks = tasks.filter((t) => t.status === col.id);
 
-  const handleDragStart  = (e, task) => e.dataTransfer.setData("taskId", task.id);
-  const getIndicators    = ()        => Array.from(document.querySelectorAll(`[data-column="${col.id}"]`));
-  const clearHighlights  = (els)     => (els || getIndicators()).forEach((i) => (i.style.opacity = "0"));
+  const handleDragStart = (e, task) => e.dataTransfer.setData("taskId", task.id);
+  const getIndicators = () => Array.from(document.querySelectorAll(`[data-column="${col.id}"]`));
+  const clearHighlights = (els) => (els || getIndicators()).forEach((i) => (i.style.opacity = "0"));
 
   const getNearestIndicator = (e, indicators) => {
     const OFFSET = 50;
     return indicators.reduce(
       (closest, child) => {
-        const box    = child.getBoundingClientRect();
+        const box = child.getBoundingClientRect();
         const offset = e.clientY - (box.top + OFFSET);
         return offset < 0 && offset > closest.offset ? { offset, element: child } : closest;
       },
@@ -209,7 +209,7 @@ const Column = ({ col, tasks, setTasks }) => {
     );
   };
 
-  const handleDragOver  = (e) => {
+  const handleDragOver = (e) => {
     e.preventDefault();
     clearHighlights();
     const { element } = getNearestIndicator(e, getIndicators());
@@ -227,13 +227,13 @@ const Column = ({ col, tasks, setTasks }) => {
     const before = element.dataset.before || "-1";
     if (before === taskId) return;
 
-    let copy      = [...tasks];
+    let copy = [...tasks];
     let taskToMove = copy.find((t) => t.id === taskId);
     if (!taskToMove) return;
 
     taskToMove = { ...taskToMove, status: col.id };
-    copy       = copy.filter((t) => t.id !== taskId);
-    const idx  = before === "-1" ? copy.length : copy.findIndex((t) => t.id === before);
+    copy = copy.filter((t) => t.id !== taskId);
+    const idx = before === "-1" ? copy.length : copy.findIndex((t) => t.id === before);
     copy.splice(idx, 0, taskToMove);
     setTasks(copy);
 
@@ -256,7 +256,7 @@ const Column = ({ col, tasks, setTasks }) => {
         </div>
         <button className="text-zinc-600 hover:text-zinc-300 transition-colors p-1 rounded hover:bg-zinc-800">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
           </svg>
         </button>
       </div>
@@ -272,7 +272,7 @@ const Column = ({ col, tasks, setTasks }) => {
         {colTasks.length === 0 && !active && (
           <div className="flex flex-col items-center justify-center py-8 gap-2 border border-dashed border-zinc-800 rounded-xl">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-700">
-              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+              <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
             </svg>
             <p className="text-zinc-700 text-xs">No tasks</p>
           </div>
@@ -281,10 +281,10 @@ const Column = ({ col, tasks, setTasks }) => {
           <TaskCard key={task.id} task={task} handleDragStart={handleDragStart} />
         ))}
         <DropIndicator beforeId={null} column={col.id} />
-        <button className="flex items-center gap-2 text-zinc-600 hover:text-zinc-300 text-sm py-2 px-3 rounded-lg hover:bg-zinc-800/60 transition-colors w-full">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
+        <button
+          onClick={() => openModal(col.id)}
+          className="flex items-center gap-2 text-zinc-600 hover:text-zinc-300 text-sm py-2 px-3 rounded-lg hover:bg-zinc-800/60 transition-colors w-full"
+        >
           Add task
         </button>
       </div>
@@ -295,10 +295,12 @@ const Column = ({ col, tasks, setTasks }) => {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function MyTasks() {
-  const [tasks, setTasks]     = useState([]);
-  const [search, setSearch]   = useState("");
+  const [tasks, setTasks] = useState([]);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState(null);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [newStatus, setNewStatus] = useState("todo");
 
   const { projects, activeProject, setActiveProject } = useProjects();
 
@@ -353,7 +355,7 @@ export default function MyTasks() {
         {activeProject && (
           <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             New Task
           </button>
@@ -378,8 +380,8 @@ export default function MyTasks() {
       {!loading && !error && !activeProject && (
         <div className="flex flex-col items-center justify-center py-24 gap-3 border border-dashed border-zinc-800 rounded-2xl">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-700">
-            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
           </svg>
           <p className="text-zinc-600 text-sm">Create a project from the sidebar to get started</p>
         </div>
@@ -391,7 +393,7 @@ export default function MyTasks() {
           <div className="relative max-w-xs">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
               className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
               type="text"
@@ -404,11 +406,44 @@ export default function MyTasks() {
 
           <div className="grid grid-cols-3 gap-4">
             {COLUMNS.map((col) => (
-              <Column key={col.id} col={col} tasks={filtered} setTasks={setTasks} />
+              <Column
+                key={col.id}
+                col={col}
+                tasks={filtered}
+                setTasks={setTasks}
+                openModal={(status) => {
+                  setNewStatus(status);
+                  setShowModal(true);
+                }}
+              />
             ))}
           </div>
+          {showModal && (
+  <TaskModal
+    status={newStatus}
+    onClose={() => setShowModal(false)}
+    onSave={async (taskData) => {
+      try {
+        const res = await createTask(activeProject._id, taskData);
+
+        const formattedTask = formatTask(
+          res.data.data,
+          activeProject.name,
+          activeProject.color
+        );
+
+        setTasks((prev) => [formattedTask, ...prev]);
+        setShowModal(false);
+
+      } catch (error) {
+        console.error("Task create failed:", error);
+      }
+    }}
+  />
+)}
         </>
       )}
     </div>
+
   );
 }

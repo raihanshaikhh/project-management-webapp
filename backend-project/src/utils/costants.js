@@ -11,5 +11,13 @@ export const TaskStatusEnum = {
   IN_PROGRESS: "in_progress",
   DONE: "done",
 };
-
 export const AvailableTaskStatus = Object.values(TaskStatusEnum);
+
+
+export const TaskPriority = {
+  LOW: "LOW",
+  MEDIUM: "MEDIUM",
+  HIGH: "HIGH",
+  URGENT: "URGENT",
+};
+export const Priority = Object.values(TaskPriority);

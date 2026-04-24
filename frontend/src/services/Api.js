@@ -33,6 +33,7 @@ export const deleteTask = (taskId) => API.delete(`/tasks/${taskId}`)
 export const createSubTask = (taskId, title) => API.post(`/tasks/${taskId}/subtasks`, { title })
 export const updateSubTask = (subtaskId, data) => API.patch(`/subtasks/${subtaskId}`, data)
 export const deleteSubTask = (subtaskId) => API.delete(`/subtasks/${subtaskId}`)
+// tasks
 
 
 export default API;

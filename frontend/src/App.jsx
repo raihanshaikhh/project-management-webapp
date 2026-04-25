@@ -6,7 +6,7 @@ import MyTasks from "./pages/MyTasks.jsx";
 import Inbox from "./pages/Inbox.jsx";
 import Calendar from "./pages/Calendar.jsx";
 import ProtectedRoute from "./Routes/ProtectedRoutes.jsx";
-
+import AppProviders from "./AppProvider.jsx";
 function App() {
   return (
     <Routes>
@@ -14,12 +14,14 @@ function App() {
       <Route path="/sign-in" element={<Auth />} />
 
       <Route element={<ProtectedRoute />}>
+      <Route element={<AppProviders />}>
         <Route path="/app" element={<DashboardLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="tasks" element={<MyTasks />} />
           <Route path="inbox" element={<Inbox />} />
           <Route path="calendar" element={<Calendar />} />
         </Route>
+      </Route>
       </Route>
     </Routes>
   )

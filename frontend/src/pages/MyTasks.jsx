@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { fetchTasks, updateTask, createTask } from "../services/Api.js";
 import { useProjects } from "../context/Projectscontext.jsx";
 import TaskModal from "../components/TaskModal.jsx";
+import EditTaskModal from "../components/EditTaskModal.jsx";
+import { PiNotePencilBold } from "react-icons/pi";
 
 const COLUMNS = [
   { id: "todo", label: "To do", accent: "#378ADD" },
@@ -37,7 +39,7 @@ const formatTask = (t, projectName, projectColor) => ({
 const ProjectDropdown = ({ projects, activeProject, onSelect }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  
+
   // close on outside click
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -145,7 +147,7 @@ const DropIndicator = ({ beforeId, column }) => (
   />
 );
 
-const TaskCard = ({ task, handleDragStart }) => {
+const TaskCard = ({ task, handleDragStart, onEdit }) => {
   const done = task.status === "done";
   return (
     <>
@@ -155,6 +157,7 @@ const TaskCard = ({ task, handleDragStart }) => {
         layoutId={task.id}
         draggable="true"
         onDragStart={(e) => handleDragStart(e, task)}
+        onDoubleClick={() => onEdit(task)}
         className="group bg-zinc-900/80 backdrop-blur border border-zinc-800/50 rounded-xl overflow-hidden hover:border-zinc-500 hover:shadow-lg hover:shadow-black/20 transition-colors cursor-grab active:cursor-grabbing"
       >
         <div className="p-3 flex flex-col gap-3">
@@ -164,6 +167,15 @@ const TaskCard = ({ task, handleDragStart }) => {
             }`}>
             {task.priority === "High" ? "Urgent" : task.priority === "Medium" ? "Important" : "Normal"}
           </span>
+          <button
+    onClick={(e) => {
+      e.stopPropagation();
+      onEdit(task);
+    }}
+    className="transition text-zinc-500 hover:text-white rounded hover:bg-zinc-800 cursor-pointer absolute right-2 top-2 p-2"
+  >
+    <PiNotePencilBold size={15} />
+  </button>
           <p className={`text-sm leading-snug ${done ? "line-through text-zinc-600" : "text-zinc-100"}`}>
             {task.title}
           </p>
@@ -189,7 +201,7 @@ const TaskCard = ({ task, handleDragStart }) => {
   );
 };
 
-const Column = ({ col, tasks, setTasks, openModal }) => {
+const Column = ({ col, tasks, setTasks, openModal, openEdit }) => {
   const [active, setActive] = useState(false);
   const colTasks = tasks.filter((t) => t.status === col.id);
 
@@ -278,7 +290,7 @@ const Column = ({ col, tasks, setTasks, openModal }) => {
           </div>
         )}
         {colTasks.map((task) => (
-          <TaskCard key={task.id} task={task} handleDragStart={handleDragStart} />
+          <TaskCard key={task.id} task={task} handleDragStart={handleDragStart} onEdit={openEdit} />
         ))}
         <DropIndicator beforeId={null} column={col.id} />
         <button
@@ -301,7 +313,8 @@ export default function MyTasks() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [newStatus, setNewStatus] = useState("todo");
-
+  const [editingTask, setEditingTask] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const { projects, activeProject, setActiveProject } = useProjects();
 
   // fetch tasks whenever activeProject changes
@@ -415,28 +428,57 @@ export default function MyTasks() {
                   setNewStatus(status);
                   setShowModal(true);
                 }}
+                openEdit={(task) => {
+                  setEditingTask(task);
+                  setShowEditModal(true);
+                }}
               />
             ))}
           </div>
           {showModal && (
-  <TaskModal
-    status={newStatus}
-    onClose={() => setShowModal(false)}
-    onSave={async (taskData) => {
-      try {
-        const res = await createTask(activeProject._id, taskData);
+            <TaskModal
+              status={newStatus}
+              onClose={() => setShowModal(false)}
+              onSave={async (taskData) => {
+                try {
+                  const res = await createTask(activeProject._id, taskData);
 
-        const formattedTask = formatTask(
-          res.data.data,
-          activeProject.name,
-          activeProject.color
+                  const formattedTask = formatTask(
+                    res.data.data,
+                    activeProject.name,
+                    activeProject.color
+                  );
+
+                  setTasks((prev) => [formattedTask, ...prev]);
+                  setShowModal(false);
+
+                } catch (error) {
+                  console.error("Task create failed:", error);
+                }
+              }}
+            />
+          )}
+          {showEditModal && editingTask && (
+  <EditTaskModal
+    task={editingTask}
+    onClose={() => {
+      setShowEditModal(false);
+      setEditingTask(null);
+    }}
+    onSave={async (data) => {
+      try {
+        await updateTask(editingTask.id, data);
+
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === editingTask.id ? { ...t, ...data } : t
+          )
         );
 
-        setTasks((prev) => [formattedTask, ...prev]);
-        setShowModal(false);
-
+        setShowEditModal(false);
+        setEditingTask(null);
       } catch (error) {
-        console.error("Task create failed:", error);
+        console.error("Edit failed", error);
       }
     }}
   />

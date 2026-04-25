@@ -1,46 +1,63 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   fetchProjects,
-  createProject  as apiCreateProject,
-  updateProject  as apiUpdateProject,
-  deleteProject  as apiDeleteProject,
-} from '../services/Api.js';
+  createProject as apiCreateProject,
+  updateProject as apiUpdateProject,
+  deleteProject as apiDeleteProject,
+} from "../services/Api.js";
+
+import { getToken } from "../Routes/ProtectedRoutes.jsx";
 
 const ProjectsContext = createContext(null);
 
 export function ProjectsProvider({ children }) {
-  const [projects, setProjects]           = useState([]);
-  const [loading, setLoading]             = useState(true);
-  const [error, setError]                 = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeProject, setActiveProject] = useState(null);
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        setLoading(true);
-        const res  = await fetchProjects();
-        const list = res.data.data.map((entry) => entry.project);
-        setProjects(list);
+  const token = getToken();
 
-        // auto-select the first project so MyTasks always has something to show
-        if (list.length > 0) setActiveProject(list[0]);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load projects');
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProjects();
-  }, []);
-
-  const addProject = async (name, description = '') => {
+  const loadProjects = async () => {
     try {
-      const res        = await apiCreateProject(name, description);
+      setLoading(true);
+
+      const res = await fetchProjects();
+      const list = res.data.data.map((entry) => entry.project);
+
+      setProjects(list);
+      setActiveProject(list[0] || null);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to load projects");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      loadProjects();
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
+
+  const addProject = async (name, description = "") => {
+    try {
+      const res = await apiCreateProject(name, description);
       const newProject = res.data.data;
+
       setProjects((prev) => [...prev, newProject]);
+
+      if (!activeProject) {
+        setActiveProject(newProject);
+      }
+
       return newProject;
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create project');
+      setError(err.response?.data?.message || "Failed to create project");
       throw err;
     }
   };
@@ -48,29 +65,38 @@ export function ProjectsProvider({ children }) {
   const removeProject = async (projectId) => {
     try {
       await apiDeleteProject(projectId);
+
       setProjects((prev) => {
         const updated = prev.filter((p) => p._id !== projectId);
-        // if the deleted one was active, fall back to the first remaining
+
         if (activeProject?._id === projectId) {
-          setActiveProject(updated[0] ?? null);
+          setActiveProject(updated[0] || null);
         }
+
         return updated;
       });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete project');
+      setError(err.response?.data?.message || "Failed to delete project");
       throw err;
     }
   };
 
   const updateProject = async (projectId, name, description) => {
     try {
-      const res     = await apiUpdateProject(projectId, name, description);
-      const updated = res.data.data;
-      setProjects((prev) => prev.map((p) => (p._id === projectId ? updated : p)));
-      if (activeProject?._id === projectId) setActiveProject(updated);
-      return updated;
+      const res = await apiUpdateProject(projectId, name, description);
+      const updatedProject = res.data.data;
+
+      setProjects((prev) =>
+        prev.map((p) => (p._id === projectId ? updatedProject : p))
+      );
+
+      if (activeProject?._id === projectId) {
+        setActiveProject(updatedProject);
+      }
+
+      return updatedProject;
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update project');
+      setError(err.response?.data?.message || "Failed to update project");
       throw err;
     }
   };
@@ -83,6 +109,7 @@ export function ProjectsProvider({ children }) {
         error,
         activeProject,
         setActiveProject,
+        loadProjects,
         addProject,
         removeProject,
         updateProject,
@@ -94,7 +121,11 @@ export function ProjectsProvider({ children }) {
 }
 
 export function useProjects() {
-  const ctx = useContext(ProjectsContext);
-  if (!ctx) throw new Error('useProjects must be used inside <ProjectsProvider>');
-  return ctx;
+  const context = useContext(ProjectsContext);
+
+  if (!context) {
+    throw new Error("useProjects must be used inside <ProjectsProvider>");
+  }
+
+  return context;
 }

@@ -95,7 +95,7 @@ const Dashboard = () => {
         <Stats
           title="In Progress"
           value={dashboardData?.taskCounts?.in_progress ?? 0}
-          icon={<RiProgress5Line className="text-amber-400" />}
+          icon={<RiProgress5Line className="text-amber-400"  />}
         />
 
         <Stats
@@ -125,7 +125,7 @@ const Dashboard = () => {
               return (
                 <div
                   key={task.id}
-                  className={`flex items-start gap-4 py-4 transition-opacity ${i < TASKS.length - 1 ? "border-b border-zinc-800/50" : ""
+                  className={`flex items-start gap-4 py-4 transition-opacity ${i < task.length - 1 ? "border-b border-zinc-800/50" : ""
                     } ${done ? "opacity-60" : "opacity-100"}`}
                 >
                   {/* Checkbox */}

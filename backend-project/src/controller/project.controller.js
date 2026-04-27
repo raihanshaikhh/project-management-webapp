@@ -8,58 +8,58 @@ import mongoose from "mongoose"
 import { AvailableUserRole, UserRolesEnum } from "../utils/costants.js"
 
 const getProject = asyncHandler(async (req, res) => {
-  const project = await ProjectMember.aggregate([
-    {
-      $match: {
-        user: new mongoose.Types.ObjectId(req.user._id)
-      }
-    },
-    {
-      $lookup: {
-        from: "projects",
-        localField: "project",   // ✅ singular
-        foreignField: "_id",
-        as: "project",
-        pipeline: [
-          {
-            $lookup: {
-              from: "projectmembers",
-              localField: "_id",
-              foreignField: "project", // ✅ singular
-              as: "projectmembers"
+    const project = await ProjectMember.aggregate([
+        {
+            $match: {
+                user: new mongoose.Types.ObjectId(req.user._id)
             }
-          },
-          {
-            $addFields: {
-              members: { $size: "$projectmembers" }
-            }
-          }
-        ]
-      }
-    },
-    {
-  $unwind: "$project"
-},
-    {
-      $project: {
-        project: {
-          _id: "$project._id",
-          name: "$project.name",
-          description: "$project.description",
-          members: "$project.members",
-          createdAt: "$project.createdAt",
-          createdBy: "$project.createdBy"
         },
-        role: 1,
-        _id: 0
-      }
-    }
-  ])
+        {
+            $lookup: {
+                from: "projects",
+                localField: "project",   // ✅ singular
+                foreignField: "_id",
+                as: "project",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "projectmembers",
+                            localField: "_id",
+                            foreignField: "project", // ✅ singular
+                            as: "projectmembers"
+                        }
+                    },
+                    {
+                        $addFields: {
+                            members: { $size: "$projectmembers" }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $unwind: "$project"
+        },
+        {
+            $project: {
+                project: {
+                    _id: "$project._id",
+                    name: "$project.name",
+                    description: "$project.description",
+                    members: "$project.members",
+                    createdAt: "$project.createdAt",
+                    createdBy: "$project.createdBy"
+                },
+                role: 1,
+                _id: 0
+            }
+        }
+    ])
 
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, project, "project fetched successfully"))
+    return res
+        .status(200)
+        .json(new ApiResponse(200, project, "project fetched successfully"))
 })
 
 const getProjectById = asyncHandler(async (req, res) => {
@@ -192,19 +192,19 @@ const getProjectMembers = asyncHandler(async (req, res) => {
         }
     },
     {
-        $addFields:{
-            user:{
-                $arrayElemAt:["$user", 0]
+        $addFields: {
+            user: {
+                $arrayElemAt: ["$user", 0]
             }
         }
-    },{
-        $project:{
-            project:1,
-            user:1,
-            role:1,
-            createdAt:1,
-            updatedAt:1,
-            _id:0
+    }, {
+        $project: {
+            project: 1,
+            user: 1,
+            role: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            _id: 0
         }
     }
 
@@ -213,52 +213,52 @@ const getProjectMembers = asyncHandler(async (req, res) => {
 
 })
 const updateMemberRole = asyncHandler(async (req, res) => {
-    const {projectId, userId} = req.params
-    const{newrole} = req.body
+    const { projectId, userId } = req.params
+    const { newrole } = req.body
 
-    if(!UserRolesEnum.includes(newrole)){
-        throw new ApiError(404, "invalid role")
+    if (!Object.values(UserRolesEnum).includes(newRole)) {
+        throw new ApiError(400, "Invalid role");
     }
-    let projectMember = await ProjectMember.findOne(
-        {project: new mongoose.Types.ObjectId(projectId)},
-         {user: new mongoose.Types.ObjectId(userId)},
+    let projectMember = await ProjectMember.findOne({
+        project: new mongoose.Types.ObjectId(projectId),
+        user: new mongoose.Types.ObjectId(userId),
+    })
+    if (!projectMember) {
+        throw new ApiError(400, "project member not found")
+    }
+
+    projectMember = await ProjectMember.findByIdAndUpdate(
+        projectMember._id, {
+        role: newrole
+    }, { new: true }
     )
-    if(!projectMember){
+    if (!projectMember) {
         throw new ApiError(404, "project member not found")
     }
-
-   projectMember =  await ProjectMember.findByIdAndUpdate(
-        projectMember._id,{
-            role: newrole
-        },{new:true}
-    )
-    if(!projectMember){
-        throw new ApiError(404, "project member not found")
-    }
- return res.status(200).json(new ApiResponse(200, projectMember, "role updated succesfully"))
+    return res.status(200).json(new ApiResponse(200, projectMember, "role updated succesfully"))
 
 })
 
 const deleteMember = asyncHandler(async (req, res) => {
-       const {projectId, userId} = req.params
+    const { projectId, userId } = req.params
 
 
-   
+
     let projectMember = await ProjectMember.findOne(
-        {project: new mongoose.Types.ObjectId(projectId)},
-         {user: new mongoose.Types.ObjectId(userId)},
+        { project: new mongoose.Types.ObjectId(projectId) },
+        { user: new mongoose.Types.ObjectId(userId) },
     )
-    if(!projectMember){
+    if (!projectMember) {
         throw new ApiError(404, "project member not found")
     }
 
-   projectMember =  await ProjectMember.findByIdAndDelete(
+    projectMember = await ProjectMember.findByIdAndDelete(
         projectMember._id
     )
-    if(!projectMember){
+    if (!projectMember) {
         throw new ApiError(404, "project member not found")
     }
- return res.status(200).json(new ApiResponse(200, projectMember, "member removed succesfully"))
+    return res.status(200).json(new ApiResponse(200, projectMember, "member removed succesfully"))
 })
 export {
     getProject,

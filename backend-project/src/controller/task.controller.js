@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/api-response.js"
 import asyncHandler from "../utils/asyn-handler.js"
 import mongoose from "mongoose"
 import { Project } from "../models/project.model.js"
+import { Priority } from "../utils/costants.js"
 
 const getTasks = asyncHandler(async (req, res) => {
   const { projectId } = req.params
@@ -21,7 +22,7 @@ const getTasks = asyncHandler(async (req, res) => {
 })
 
 const createTasks = asyncHandler(async (req, res) => {
-  const { title, description, assignedTo, status } = req.body
+  const { title, description, assignedTo, status} = req.body
   const { projectId } = req.params
 
   const project = await Project.findById(projectId)
@@ -81,21 +82,52 @@ const getTaskById = asyncHandler(async (req, res) => {
 })
 
 const updateTasks = asyncHandler(async (req, res) => {
-  const { title, description, status } = req.body
-  const { taskId } = req.params
+  const {
+    title,
+    description,
+    status,
+    priority,
+    dueDate,
+    assignedTo,
+    attachments,
+    links
+  } = req.body;
 
-  if (!mongoose.Types.ObjectId.isValid(taskId)) throw new ApiError(400, "Invalid Task Id")
+  const { taskId } = req.params;
 
-  const updateData = {}
-  if (title) updateData.title = title
-  if (description) updateData.description = description
-  if (status) updateData.status = status
+  if (!mongoose.Types.ObjectId.isValid(taskId)) {
+    throw new ApiError(400, "Invalid Task Id");
+  }
 
-  const task = await Task.findByIdAndUpdate(taskId, updateData, { new: true, runValidators: true })
-  if (!task) throw new ApiError(404, "Task not found")
+  const updateData = {};
 
-  return res.status(200).json(new ApiResponse(200, task, "Task updated successfully"))
-})
+  if (title !== undefined) updateData.title = title;
+  if (description !== undefined) updateData.description = description;
+  if (status !== undefined) updateData.status = status;
+  if (priority !== undefined) updateData.priority = priority;
+  if (dueDate !== undefined) updateData.dueDate = dueDate;
+  if(links !== undefined) updateData.links = links;
+  
+
+  if (assignedTo !== undefined) {
+    updateData.assignedTo = assignedTo || null;
+  }
+
+  if (attachments !== undefined) updateData.attachments = attachments;
+  if (links !== undefined) updateData.links = links;
+
+  const task = await Task.findByIdAndUpdate(
+    taskId,
+    updateData,
+    { new: true, runValidators: true }
+  ).populate("assignedTo", "username fullName avatar");
+
+  if (!task) throw new ApiError(404, "Task not found");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, task, "Task updated successfully"));
+});
 
 const deleteTasks = asyncHandler(async (req, res) => {
   const { taskId } = req.params

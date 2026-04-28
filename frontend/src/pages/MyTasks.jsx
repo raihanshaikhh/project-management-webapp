@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchTasks, updateTask, createTask } from "../services/Api.js";
+import { fetchTasks, updateTask, createTask, deleteTask } from "../services/Api.js";
 import { useProjects } from "../context/Projectscontext.jsx";
 import TaskModal from "../components/TaskModal.jsx";
 import EditTaskModal from "../components/EditTaskModal.jsx";
@@ -21,18 +21,35 @@ const AVATAR_COLORS = {
 const toColumnId = (s) => s === "in_progress" ? "doing" : s === "done" ? "done" : "todo";
 const toBackendStatus = (c) => c === "doing" ? "in_progress" : c === "done" ? "done" : "todo";
 
-const formatTask = (t, projectName, projectColor) => ({
+const getInitials = (user) => {
+  if (!user) return "ME";
+
+  const first = user.username?.[0] || "";
+  const last = user.lastname?.[0] || "";
+
+  return `${first}${last}`.toUpperCase();
+};
+
+const formatTask = (t, projectName) => ({
   id: t._id,
   title: t.title,
+  description: t.description?.trim() || "",
   project: projectName,
-  projectColor: projectColor ?? "#378ADD",
+
   status: toColumnId(t.status),
+
   priority: t.priority || "Medium",
-  due: t.dueDate ? new Date(t.dueDate).toLocaleDateString() : "No date",
-  comments: 0,
-  assignees: t.assignedTo
-    ? [t.assignedTo.username?.slice(0, 2).toUpperCase() ?? "ME"]
-    : ["ME"],
+
+  dueDate: t.dueDate || null, // raw backend value
+
+  due: t.dueDate ? new Date(t.dueDate) : null, // UI display date object
+
+  attachments: t.attachments || [],
+  links: t.links || [],
+
+  assignedTo: t.assignedTo || null,
+
+  assignees: [getInitials(t.assignedTo)],
 });
 
 // ── Project Dropdown ──────────────────────────────────────────────────────────
@@ -149,52 +166,83 @@ const DropIndicator = ({ beforeId, column }) => (
 
 const TaskCard = ({ task, handleDragStart, onEdit }) => {
   const done = task.status === "done";
+
+  const dueLabel = task.due
+    ? task.due.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+    })
+    : "No date";
+
   return (
     <>
       <DropIndicator beforeId={task.id} column={task.status} />
+
       <motion.div
         layout
         layoutId={task.id}
         draggable="true"
         onDragStart={(e) => handleDragStart(e, task)}
         onDoubleClick={() => onEdit(task)}
-        className="group bg-zinc-900/80 backdrop-blur border border-zinc-800/50 rounded-xl overflow-hidden hover:border-zinc-500 hover:shadow-lg hover:shadow-black/20 transition-colors cursor-grab active:cursor-grabbing"
+        className="group relative bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-zinc-600 hover:shadow-xl transition-all cursor-grab active:cursor-grabbing"
       >
-        <div className="p-3 flex flex-col gap-3">
-          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium w-fit ${task.priority === "High" ? "bg-red-500/20 text-red-400" :
-            task.priority === "Medium" ? "bg-yellow-500/20 text-yellow-400" :
-              "bg-emerald-500/20 text-emerald-400"
-            }`}>
-            {task.priority === "High" ? "Urgent" : task.priority === "Medium" ? "Important" : "Normal"}
-          </span>
-          <button
-    onClick={(e) => {
-      e.stopPropagation();
-      onEdit(task);
-    }}
-    className="transition text-zinc-500 hover:text-white rounded hover:bg-zinc-800 cursor-pointer absolute right-2 top-2 p-2"
-  >
-    <PiNotePencilBold size={15} />
-  </button>
-          <p className={`text-sm leading-snug ${done ? "line-through text-zinc-600" : "text-zinc-100"}`}>
+        {/* Top Row */}
+        <div className="flex items-start justify-between gap-3">
+          <p
+            className={`text-sm font-medium leading-snug pr-2 ${done ? "line-through text-zinc-600" : "text-white"
+              }`}
+          >
             {task.title}
           </p>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: task.projectColor }} />
-            <span className="text-[11px] text-zinc-500">{task.project}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 text-zinc-500">
-              <div className="flex items-center gap-1">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                </svg>
-                <span className="text-[11px]">{task.comments}</span>
-              </div>
-              <span className="text-[11px]">{task.due}</span>
-            </div>
+
+          <span
+            className={`text-[10px] px-2 py-1 rounded-full whitespace-nowrap font-semibold
+${task.priority === "High"
+                ? "bg-orange-600/20 text-orange-500"
+                : task.priority === "Medium"
+                  ? "bg-amber-500/20 text-amber-400"
+                  : "bg-cyan-500/20 text-cyan-400"
+              }
+
+`}
+          >
+            {task.priority}
+          </span>
+        </div>
+
+        {/* Description */}
+        {task.description && (
+          <p className="text-xs text-zinc-400 mt-2 line-clamp-2 leading-relaxed">
+            {task.description}
+          </p>
+        )}
+
+        {/* Project */}
+        <div className="flex items-center gap-2 mt-3">
+          <span className="text-[11px] text-zinc-500">
+            {task.project}
+          </span>
+        </div>
+
+        {/* Bottom Row */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] text-zinc-500">
+              📅 {dueLabel}
+            </span>
+
             <AvatarStack assignees={task.assignees} />
           </div>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(task);
+            }}
+            className="text-zinc-500 hover:text-white transition"
+          >
+            <PiNotePencilBold size={16} />
+          </button>
         </div>
       </motion.div>
     </>
@@ -366,11 +414,11 @@ export default function MyTasks() {
         </div>
 
         {activeProject && (
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
+          <button className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            New Task
+            Add member
           </button>
         )}
       </div>
@@ -459,30 +507,44 @@ export default function MyTasks() {
             />
           )}
           {showEditModal && editingTask && (
-  <EditTaskModal
-    task={editingTask}
-    onClose={() => {
-      setShowEditModal(false);
-      setEditingTask(null);
-    }}
-    onSave={async (data) => {
+            <EditTaskModal
+              task={editingTask}
+              onClose={() => {
+                setShowEditModal(false);
+                setEditingTask(null);
+              }}
+              onDelete={async () => {
       try {
-        await updateTask(editingTask.id, data);
-
-        setTasks((prev) =>
-          prev.map((t) =>
-            t.id === editingTask.id ? { ...t, ...data } : t
-          )
-        );
-
+        await deleteTask(editingTask.id);
+        setTasks((prev) => prev.filter((t) => t.id !== editingTask.id));
         setShowEditModal(false);
         setEditingTask(null);
-      } catch (error) {
-        console.error("Edit failed", error);
+      } catch (err) {
+        console.error("Failed to delete task", err);
       }
     }}
-  />
-)}
+              onSave={async (data) => {
+                const res = await updateTask(editingTask.id, data);
+
+                const updated = formatTask(
+                  res.data.data,
+                  activeProject.name,
+                  activeProject.color
+                );
+
+                setTasks((prev) =>
+                  prev.map((t) =>
+                    t.id === editingTask.id ? updated : t
+                  )
+                );
+
+                setShowEditModal(false);
+                setEditingTask(null);
+
+                return true;
+              }}
+            />
+          )}
         </>
       )}
     </div>

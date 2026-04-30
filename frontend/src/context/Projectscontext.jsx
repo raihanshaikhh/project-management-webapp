@@ -15,6 +15,7 @@ export function ProjectsProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeProject, setActiveProject] = useState(null);
+  const [members, setMembers] = useState([]);
 
   const token = getToken();
 
@@ -36,6 +37,7 @@ export function ProjectsProvider({ children }) {
     }
   };
 
+
   useEffect(() => {
     if (token) {
       loadProjects();
@@ -43,7 +45,22 @@ export function ProjectsProvider({ children }) {
       setLoading(false);
     }
   }, [token]);
+  useEffect(() => {
+    if (!activeProject) {
+      setMembers([]); // ✅ clear old members
+      return;
+    }
+    const loadMembers = async () => {
+      try {
+        const res = await getProjectMembers(activeProject._id);
+        setMembers(res.data.data || []);
+      } catch (err) {
+        console.error("Failed to load members", err);
+      }
+    };
 
+    loadMembers();
+  }, [activeProject]);
   const addProject = async (name, description = "") => {
     try {
       const res = await apiCreateProject(name, description);
@@ -113,6 +130,7 @@ export function ProjectsProvider({ children }) {
         addProject,
         removeProject,
         updateProject,
+        members,
       }}
     >
       {children}

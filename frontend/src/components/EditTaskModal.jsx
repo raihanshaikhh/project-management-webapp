@@ -13,6 +13,8 @@ import {
   Archive,
   ExternalLink,
 } from "lucide-react";
+import { useProjects } from "../context/Projectscontext.jsx";
+import  addMemberToProject  from "../services/Api.js"; // ← FIX 1: import the missing function
 
 // ─── constants ────────────────────────────────────────────────────────────────
 
@@ -115,7 +117,6 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
   const [description, setDescription] = useState(task.description || "");
   const [priority, setPriority] = useState(task.priority || "Medium");
   const [assignee, setAssignee] = useState(task.assignedTo?._id || task.assignedTo || "");
-  // add to state at the top of EditTaskModal
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [dueDate, setDueDate] = useState(
     task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : ""
@@ -126,19 +127,31 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [memberInput, setMemberInput] = useState("");
+
   const fileRef = useRef(null);
+  const { setMembers, activeProject } = useProjects();
 
   // ── handlers ───────────────────────────────────────────────────────────────
 
-  const handleSave = async () => {
-    let finalLinks = [...links];
+  const normalizeUrl = (value) => {
+    if (!value) return value;
+    return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+  };
 
+  const handleSave = async () => {
+    // FIX 2: flush any pending linkInput before saving
+    let finalLinks = [...links];
     if (linkInput.trim()) {
-      finalLinks.push({ id: Date.now(), url: normalizeUrl(linkInput.trim()) });
+      const pendingLink = { id: Date.now(), url: normalizeUrl(linkInput.trim()) };
+      finalLinks.push(pendingLink);
+      setLinks(finalLinks);
+      setLinkInput("");
     }
+
     try {
       setSaving(true);
-      console.log("Saving links:", links);
       const ok = await onSave?.({
         title,
         description,
@@ -146,7 +159,7 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
         assignedTo: assignee || null,
         dueDate: dueDate || null,
         attachments,
-        links: links.map(l => ({ url: l.url }))
+        links: finalLinks.map((l) => ({ url: l.url })), // ← use finalLinks, not links
       });
       if (ok !== false) {
         setSaved(true);
@@ -158,29 +171,38 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
       setSaving(false);
     }
   };
-  // ↑ handleSave closes here — handleFileChange and addLink are sibling functions below
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
     const mapped = files.map((f) => ({
       id: Date.now() + Math.random(),
       name: f.name,
-      size: f.size > 1_000_000
-        ? `${(f.size / 1_000_000).toFixed(1)} MB`
-        : `${Math.round(f.size / 1000)} KB`,
+      size:
+        f.size > 1_000_000
+          ? `${(f.size / 1_000_000).toFixed(1)} MB`
+          : `${Math.round(f.size / 1000)} KB`,
     }));
     setAttachments((prev) => [...prev, ...mapped]);
     e.target.value = "";
   };
-  const normalizeUrl = (value) => {
-    if (!value) return value;
-    return /^https?:\/\//i.test(value) ? value : `https://${value}`;
-  };
+
   const addLink = () => {
     const value = linkInput.trim();
     if (!value) return;
     setLinks((prev) => [...prev, { id: Date.now(), url: normalizeUrl(value) }]);
     setLinkInput("");
+  };
+
+  const handleAddMember = async () => {
+    if (!memberInput.trim()) return;
+    try {
+      const res = await addMemberToProject(activeProject._id, memberInput);
+      setMembers(res.data.data.members);
+      setMemberInput("");
+      setShowAddMember(false);
+    } catch (err) {
+      console.error("Failed to add member", err);
+    }
   };
 
   // ── render ─────────────────────────────────────────────────────────────────
@@ -254,6 +276,16 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
               ))}
             </div>
           </div>
+          <div className="flex items-center justify-between">
+            <SectionLabel icon={Check}>Assignee</SectionLabel>
+
+            <button
+              onClick={() => setShowAddMember((v) => !v)}
+              className="text-[11px] px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition"
+            >
+              + Member
+            </button>
+          </div>
 
           {/* Assignee + Due Date */}
           <div className="grid grid-cols-2 gap-3">
@@ -283,6 +315,26 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
               />
             </div>
           </div>
+
+          {/* FIX 3: removed duplicate showAddMember block — render only once */}
+          {showAddMember && (
+            <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.06] flex gap-2">
+              <input
+                value={memberInput}
+                onChange={(e) => setMemberInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
+                placeholder="Enter user email..."
+                className="flex-1 h-9 px-3 rounded-[8px] bg-white/[0.04] border border-white/[0.07]
+                           text-zinc-400 text-[12px] outline-none"
+              />
+              <button
+                onClick={handleAddMember}
+                className="px-3 h-9 rounded-[8px] bg-blue-600 hover:bg-blue-500 text-white text-xs transition-colors"
+              >
+                Add
+              </button>
+            </div>
+          )}
 
           <hr className="border-white/[0.05]" />
 
@@ -369,15 +421,15 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
               <button
                 onClick={onDelete}
                 className="flex items-center gap-1.5 h-9 px-3.5 rounded-[10px] border border-red-500/40
-                 bg-red-500/15 text-red-400 text-[12px] font-semibold
-                 hover:bg-red-500/25 transition-all active:scale-95"
+                           bg-red-500/15 text-red-400 text-[12px] font-semibold
+                           hover:bg-red-500/25 transition-all active:scale-95"
               >
                 Yes, delete
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
                 className="h-9 px-3 rounded-[10px] border border-white/[0.08] text-zinc-500 text-[12px]
-                 hover:bg-white/[0.05] transition-all active:scale-95"
+                           hover:bg-white/[0.05] transition-all active:scale-95"
               >
                 Cancel
               </button>
@@ -386,8 +438,8 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
             <button
               onClick={() => setConfirmDelete(true)}
               className="flex items-center gap-1.5 h-9 px-3.5 rounded-[10px] border border-red-500/20
-               bg-red-500/[0.06] text-red-400 text-[12px] font-semibold
-               hover:bg-red-500/12 hover:border-red-500/35 transition-all active:scale-95"
+                         bg-red-500/[0.06] text-red-400 text-[12px] font-semibold
+                         hover:bg-red-500/12 hover:border-red-500/35 transition-all active:scale-95"
             >
               <Trash2 size={13} />
               Delete Task
@@ -395,13 +447,6 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
           )}
 
           <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="h-9 px-4 rounded-[10px] border border-white/[0.08] text-zinc-500 text-[12px]
-                         hover:bg-white/[0.05] hover:text-zinc-300 transition-all active:scale-95"
-            >
-              Cancel
-            </button>
             <button
               onClick={handleSave}
               disabled={saving}

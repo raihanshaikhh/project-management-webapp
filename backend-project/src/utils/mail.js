@@ -15,13 +15,19 @@ const emailSend = async (options)=>{
     const emailHtmltext = mailGenerator.generate(options.mailgenContent)
 
     const transportEmail = nodemailer.createTransport({
-        host: process.env.EMAIL_SMTP_HOST,
-        port:process.env.EMAIL_SMTP_PORT,
-        auth:{
-            user:process.env.EMAIL_SMTP_USER,
-            pass:process.env.EMAIL_SMTP_PASSWORD
-        }
-    })
+    host: process.env.EMAIL_SMTP_HOST,
+    port: Number(process.env.EMAIL_SMTP_PORT),
+    secure: false, // important
+    auth: {
+        user: process.env.EMAIL_SMTP_USER,
+        pass: process.env.EMAIL_SMTP_PASSWORD
+    },
+    logger: true,
+    debug: true
+})
+
+// verify connection
+await transportEmail.verify()
 
     const mail = {
         from:"porjectmanagerteam@example.com",

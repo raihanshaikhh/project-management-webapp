@@ -33,7 +33,10 @@ export const deleteTask = (taskId) => API.delete(`/tasks/${taskId}`)
 export const createSubTask = (taskId, title) => API.post(`/tasks/${taskId}/subtasks`, { title })
 export const updateSubTask = (subtaskId, data) => API.patch(`/subtasks/${subtaskId}`, data)
 export const deleteSubTask = (subtaskId) => API.delete(`/subtasks/${subtaskId}`)
-// tasks
+
+// add member api calls----------
+export const addMembersToProject = (projectId, email) => API.post(`/projects/${projectId}/members`,{email});
+export const getProjectMembers = (projectId)=> API.get(`'projects/${projectId}`);
 
 
 export default API;

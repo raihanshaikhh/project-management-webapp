@@ -351,7 +351,11 @@ const Column = ({ col, tasks, setTasks, openModal, openEdit }) => {
     </div>
   );
 };
+const handleAddMember = async (userId) => {
+  const res = await addMemberToProject(activeProject._id, userId);
 
+  setMembers(res.data.data.members);
+};
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function MyTasks() {
@@ -363,7 +367,7 @@ export default function MyTasks() {
   const [newStatus, setNewStatus] = useState("todo");
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  const { projects, activeProject, setActiveProject } = useProjects();
+  const { projects, activeProject, setActiveProject, members } = useProjects();
 
   // fetch tasks whenever activeProject changes
   useEffect(() => {
@@ -509,20 +513,21 @@ export default function MyTasks() {
           {showEditModal && editingTask && (
             <EditTaskModal
               task={editingTask}
+              members={members}
               onClose={() => {
                 setShowEditModal(false);
                 setEditingTask(null);
               }}
               onDelete={async () => {
-      try {
-        await deleteTask(editingTask.id);
-        setTasks((prev) => prev.filter((t) => t.id !== editingTask.id));
-        setShowEditModal(false);
-        setEditingTask(null);
-      } catch (err) {
-        console.error("Failed to delete task", err);
-      }
-    }}
+                try {
+                  await deleteTask(editingTask.id);
+                  setTasks((prev) => prev.filter((t) => t.id !== editingTask.id));
+                  setShowEditModal(false);
+                  setEditingTask(null);
+                } catch (err) {
+                  console.error("Failed to delete task", err);
+                }
+              }}
               onSave={async (data) => {
                 const res = await updateTask(editingTask.id, data);
 

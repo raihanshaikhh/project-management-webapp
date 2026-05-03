@@ -111,7 +111,7 @@ export default function Auth() {
               <Login
                 form={form}
                 onChange={handleChange}
-                onSwitch={() => navigate("/sign-up")}
+                onSwitch={() => navigate("/")}
               />
 
               <Register

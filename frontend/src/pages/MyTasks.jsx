@@ -5,6 +5,7 @@ import { useProjects } from "../context/Projectscontext.jsx";
 import TaskModal from "../components/TaskModal.jsx";
 import EditTaskModal from "../components/EditTaskModal.jsx";
 import { PiNotePencilBold } from "react-icons/pi";
+import AddMemberModal from "../components/AddmemberModal.jsx";
 
 const COLUMNS = [
   { id: "todo", label: "To do", accent: "#378ADD" },
@@ -165,6 +166,7 @@ const DropIndicator = ({ beforeId, column }) => (
 );
 
 const TaskCard = ({ task, handleDragStart, onEdit }) => {
+
   const done = task.status === "done";
 
   const dueLabel = task.due
@@ -179,8 +181,6 @@ const TaskCard = ({ task, handleDragStart, onEdit }) => {
       <DropIndicator beforeId={task.id} column={task.status} />
 
       <motion.div
-        layout
-        layoutId={task.id}
         draggable="true"
         onDragStart={(e) => handleDragStart(e, task)}
         onDoubleClick={() => onEdit(task)}
@@ -367,18 +367,23 @@ export default function MyTasks() {
   const [newStatus, setNewStatus] = useState("todo");
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+<<<<<<< HEAD
   const { projects, activeProject, setActiveProject, members } = useProjects();
+=======
+  const [showMemberModal, setShowMemberModal] = useState(false);
+  const { projects, activeProject, setActiveProject, fetchMembers, projectMembers } = useProjects();
+>>>>>>> 332f7b5 (added add member feature)
 
   // fetch tasks whenever activeProject changes
   useEffect(() => {
     if (!activeProject) return;
-
     const load = async () => {
       try {
         setLoading(true);
         setError(null);
         const res = await fetchTasks(activeProject._id);
         setTasks(res.data.data.map((t) => formatTask(t, activeProject.name, activeProject.color)));
+        await fetchMembers(activeProject._id); // ← add this line
       } catch (err) {
         console.error("Failed to fetch tasks", err);
         setError("Failed to load tasks");
@@ -386,7 +391,6 @@ export default function MyTasks() {
         setLoading(false);
       }
     };
-
     load();
   }, [activeProject]);
 
@@ -418,11 +422,18 @@ export default function MyTasks() {
         </div>
 
         {activeProject && (
-          <button className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
+          <button
+            onClick={() => setShowMemberModal(true)}
+            className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             Add member
+            {(projectMembers[activeProject._id]?.length ?? 0) > 0 && (
+              <span className="bg-blue-500/30 text-blue-200 text-xs px-1.5 py-0.5 rounded-full">
+                {projectMembers[activeProject._id].length}
+              </span>
+            )}
           </button>
         )}
       </div>
@@ -548,6 +559,12 @@ export default function MyTasks() {
 
                 return true;
               }}
+            />
+          )}
+          {showMemberModal && activeProject && (
+            <AddMemberModal
+              projectId={activeProject._id}
+              onClose={() => setShowMemberModal(false)}
             />
           )}
         </>

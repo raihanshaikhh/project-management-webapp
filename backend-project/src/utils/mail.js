@@ -1,6 +1,18 @@
 import Mailgen from "mailgen";
 import nodemailer from "nodemailer"
 
+
+const transportEmail = nodemailer.createTransport({
+    host: process.env.EMAIL_SMTP_HOST,
+    port: Number(process.env.EMAIL_SMTP_PORT),
+    secure: Number(process.env.EMAIL_SMTP_PORT) === 465,
+    auth: {
+        user: process.env.EMAIL_SMTP_USER,
+        pass: process.env.EMAIL_SMTP_PASSWORD
+    }
+})
+
+
 const emailSend = async (options)=>{
     const mailGenerator=new Mailgen({
         theme: "default",
@@ -88,11 +100,26 @@ const passwordResetTemplate = (username, resetPasswordUrl) => {
         }
     }
 }
+const inviteTestEmail = async ({ toEmail, toName, inviterName, projectName }) => {
+  if (!process.env.EMAIL_SMTP_HOST || !process.env.EMAIL_SMTP_PORT || !process.env.EMAIL_SMTP_USER || !process.env.EMAIL_SMTP_PASSWORD) {
+    throw new Error("Missing SMTP env vars. Please set EMAIL_SMTP_HOST, EMAIL_SMTP_PORT, EMAIL_SMTP_USER, EMAIL_SMTP_PASSWORD");
+  }
 
+  const info = await transportEmail.sendMail({
+    from: '"Project Manager" <no-reply@project.com>',
+    to: toEmail,
+    subject: `You're invited to ${projectName}`,
+    html: `<p>Hi ${toName},</p>
+           <p>${inviterName} invited you to join <b>${projectName}</b>.</p>`,
+    text: `${inviterName} invited you to join ${projectName}`,
+  });
 
-
+  console.log("Invite email sent:", info.messageId);
+  return info;
+};
 export{
     emailVerificationTemplate,
     passwordResetTemplate,
-    emailSend
+    emailSend,
+    inviteTestEmail
 }

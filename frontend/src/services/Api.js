@@ -33,20 +33,18 @@ export const deleteTask = (taskId) => API.delete(`/tasks/${taskId}`)
 export const createSubTask = (taskId, title) => API.post(`/tasks/${taskId}/subtasks`, { title })
 export const updateSubTask = (subtaskId, data) => API.patch(`/subtasks/${subtaskId}`, data)
 export const deleteSubTask = (subtaskId) => API.delete(`/subtasks/${subtaskId}`)
-<<<<<<< HEAD
 
 // add member api calls----------
-export const addMembersToProject = (projectId, email) => API.post(`/projects/${projectId}/members`,{email});
-export const getProjectMembers = (projectId)=> API.get(`'projects/${projectId}`);
-=======
-// tasks
+// Get all members of a project
 export const getProjectMembers = (projectId) =>
   API.get(`/projects/${projectId}/members`);
->>>>>>> 332f7b5 (added add member feature)
 
+// Add a member to project
 export const addMembersToProject = (projectId, email, role = "member") =>
   API.post(`/projects/${projectId}/members`, { email, role });
 
+// Delete a member
 export const deleteMember = (projectId, userId) =>
   API.delete(`/projects/${projectId}/members/${userId}`);
+
 export default API;

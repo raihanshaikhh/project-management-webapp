@@ -37,7 +37,6 @@ export function ProjectsProvider({ children }) {
     }
   };
 
-
   useEffect(() => {
     if (token) {
       loadProjects();
@@ -45,22 +44,26 @@ export function ProjectsProvider({ children }) {
       setLoading(false);
     }
   }, [token]);
-  useEffect(() => {
-    if (!activeProject) {
-      setMembers([]); // ✅ clear old members
-      return;
-    }
-    const loadMembers = async () => {
-      try {
-        const res = await getProjectMembers(activeProject._id);
-        setMembers(res.data.data || []);
-      } catch (err) {
-        console.error("Failed to load members", err);
-      }
-    };
 
-    loadMembers();
-  }, [activeProject]);
+  // ── Members ──────────────────────────────────────────────
+
+  const fetchMembers = async (projectId) => {
+    try {
+      const { data } = await getProjectMembers(projectId);
+      setProjectMembers((prev) => ({ ...prev, [projectId]: data.data }));
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch members");
+    }
+  };
+
+  // FIX 1: useEffect now calls fetchMembers so members are stored as
+  // { [projectId]: [...] } — previously called setProjectMembers(res.data.data)
+  // which stored a plain array, making projectMembers[projectId] undefined everywhere
+  useEffect(() => {
+    if (!activeProject) return;
+    fetchMembers(activeProject._id);
+  }, [activeProject?._id]); // dep on _id only — avoids re-running on object reference changes
+
   const addProject = async (name, description = "") => {
     try {
       const res = await apiCreateProject(name, description);
@@ -84,7 +87,6 @@ export function ProjectsProvider({ children }) {
         }
         return updated;
       });
-      // Clean up members cache for deleted project
       setProjectMembers((prev) => {
         const updated = { ...prev };
         delete updated[projectId];
@@ -111,31 +113,15 @@ export function ProjectsProvider({ children }) {
     }
   };
 
-  // ── Members ──────────────────────────────────────────────
-
-  const fetchMembers = async (projectId) => {
-    try {
-      const { data } = await getProjectMembers(projectId);
-      // data.data because your API wraps responses in { data: ... }
-      setProjectMembers((prev) => ({ ...prev, [projectId]: data.data }));
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch members");
-    }
-  };
-
   const addMember = async (projectId, email, role = "member") => {
     try {
-      const { data } = await addMembersToProject(projectId, email, role);
-      if (data?.data) {
-        setProjectMembers((prev) => ({
-          ...prev,
-          [projectId]: [...(prev[projectId] || []), data.data],
-        }));
-      }
-      return data.data;
+      await addMembersToProject(projectId, email, role);
+      // FIX 2: instead of trying to append data.data (whose shape is unpredictable),
+      // re-fetch the full members list so the UI is always in sync with the server
+      await fetchMembers(projectId);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to add member");
-      throw err; // re-throw so the modal can show the error
+      throw err;
     }
   };
 
@@ -166,7 +152,6 @@ export function ProjectsProvider({ children }) {
         addProject,
         removeProject,
         updateProject,
-        // members
         projectMembers,
         fetchMembers,
         addMember,

@@ -11,10 +11,10 @@ import { Priority } from "../utils/costants.js"
 const getTasks = asyncHandler(async (req, res) => {
   const { projectId } = req.params
 
-  const project = await Project.findById(projectId)        // ✅ fixed
+  const project = await Project.findById(projectId)
   if (!project) throw new ApiError(404, "Project not found")
 
-  const tasks = await Task.find({                           // ✅ fixed
+  const tasks = await Task.find({
     project: new mongoose.Types.ObjectId(projectId)
   }).populate("assignedTo", "avatar username fullName")
 
@@ -22,14 +22,14 @@ const getTasks = asyncHandler(async (req, res) => {
 })
 
 const createTasks = asyncHandler(async (req, res) => {
-  const { title, description, assignedTo, status} = req.body
+  const { title, description, assignedTo, status } = req.body
   const { projectId } = req.params
 
   const project = await Project.findById(projectId)
   if (!project) throw new ApiError(404, "Project not found")
 
   const files = req.files || []
-  const attachments = files.map((file) => ({              // ✅ fixed
+  const attachments = files.map((file) => ({
     url: `${process.env.SERVER_URL}/images/${file.originalname}`,
     MimeType: file.mimetype,
     size: file.size
@@ -39,10 +39,10 @@ const createTasks = asyncHandler(async (req, res) => {
     title,
     description,
     project: new mongoose.Types.ObjectId(projectId),
-    assignedTo: assignedTo ? new mongoose.Types.ObjectId(assignedTo) : undefined,
+    assignedTo: assignedTo ? new mongoose.Types.ObjectId(assignedTo) : null,
     status,
     assignedBy: new mongoose.Types.ObjectId(req.user._id),
-    attachments                                            // ✅ now defined
+    attachments
   })
 
   return res.status(201).json(new ApiResponse(201, task, "Task created successfully"))
@@ -99,26 +99,50 @@ const updateTasks = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid Task Id");
   }
 
-  const updateData = {};
+  // FIX 1: separate $set and $unset so that sending assignedTo: null
+  // actually clears the field in MongoDB instead of being silently ignored
+  const $set = {};
+  const $unset = {};
 
-  if (title !== undefined) updateData.title = title;
-  if (description !== undefined) updateData.description = description;
-  if (status !== undefined) updateData.status = status;
-  if (priority !== undefined) updateData.priority = priority;
-  if (dueDate !== undefined) updateData.dueDate = dueDate;
-  if(links !== undefined) updateData.links = links;
-  
+  if (title !== undefined)       $set.title       = title;
+  if (description !== undefined) $set.description = description;
+  if (status !== undefined)      $set.status      = status;
+  if (priority !== undefined)    $set.priority    = priority;
+  if (attachments !== undefined) $set.attachments = attachments;
 
-  if (assignedTo !== undefined) {
-    updateData.assignedTo = assignedTo || null;
+  // FIX 2: removed the duplicate `links` assignment that appeared twice before
+  if (links !== undefined)       $set.links       = links;
+
+  // FIX 3: dueDate — allow null to clear it too, same pattern as assignedTo
+  if (dueDate !== undefined) {
+    if (dueDate === null || dueDate === "") {
+      $unset.dueDate = "";
+    } else {
+      $set.dueDate = dueDate;
+    }
   }
 
-  if (attachments !== undefined) updateData.attachments = attachments;
-  if (links !== undefined) updateData.links = links;
+  // FIX 4: assignedTo — cast to ObjectId when present, $unset when null/""
+  // Previously `updateData.assignedTo = null` was passed into $set which
+  // Mongoose ignores for ObjectId ref fields, leaving old assignee intact
+  if (assignedTo !== undefined) {
+    if (assignedTo === null || assignedTo === "") {
+      $unset.assignedTo = "";           // ← this is what actually clears it
+    } else {
+      if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+        throw new ApiError(400, "Invalid assignedTo user Id");
+      }
+      $set.assignedTo = new mongoose.Types.ObjectId(assignedTo);
+    }
+  }
+
+  // Build the final modifier — only include $unset if there's something to unset
+  const modifier = { $set };
+  if (Object.keys($unset).length > 0) modifier.$unset = $unset;
 
   const task = await Task.findByIdAndUpdate(
     taskId,
-    updateData,
+    modifier,
     { new: true, runValidators: true }
   ).populate("assignedTo", "username fullName avatar");
 
@@ -144,7 +168,7 @@ const deleteTasks = asyncHandler(async (req, res) => {
 
 const createSubTasks = asyncHandler(async (req, res) => {
   const { taskId } = req.params
-  const { title } = req.body                              // ✅ fixed
+  const { title } = req.body
 
   if (!mongoose.Types.ObjectId.isValid(taskId)) throw new ApiError(400, "Invalid Task Id")
 

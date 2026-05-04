@@ -24,10 +24,8 @@ const toBackendStatus = (c) => c === "doing" ? "in_progress" : c === "done" ? "d
 
 const getInitials = (user) => {
   if (!user) return "ME";
-
   const first = user.username?.[0] || "";
   const last = user.lastname?.[0] || "";
-
   return `${first}${last}`.toUpperCase();
 };
 
@@ -36,20 +34,13 @@ const formatTask = (t, projectName) => ({
   title: t.title,
   description: t.description?.trim() || "",
   project: projectName,
-
   status: toColumnId(t.status),
-
   priority: t.priority || "Medium",
-
-  dueDate: t.dueDate || null, // raw backend value
-
-  due: t.dueDate ? new Date(t.dueDate) : null, // UI display date object
-
+  dueDate: t.dueDate || null,
+  due: t.dueDate ? new Date(t.dueDate) : null,
   attachments: t.attachments || [],
   links: t.links || [],
-
   assignedTo: t.assignedTo || null,
-
   assignees: [getInitials(t.assignedTo)],
 });
 
@@ -58,7 +49,6 @@ const ProjectDropdown = ({ projects, activeProject, onSelect }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  // close on outside click
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", handler);
@@ -69,7 +59,6 @@ const ProjectDropdown = ({ projects, activeProject, onSelect }) => {
 
   return (
     <div ref={ref} className="relative">
-      {/* Trigger button */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 rounded-lg text-sm text-zinc-200 transition-colors min-w-[160px] justify-between"
@@ -85,7 +74,6 @@ const ProjectDropdown = ({ projects, activeProject, onSelect }) => {
             {activeProject?.name ?? "Select project"}
           </span>
         </div>
-        {/* chevron */}
         <svg
           width="12" height="12" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2.5"
@@ -96,7 +84,6 @@ const ProjectDropdown = ({ projects, activeProject, onSelect }) => {
         </svg>
       </button>
 
-      {/* Dropdown panel */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -166,79 +153,55 @@ const DropIndicator = ({ beforeId, column }) => (
 );
 
 const TaskCard = ({ task, handleDragStart, onEdit }) => {
-
   const done = task.status === "done";
 
   const dueLabel = task.due
-    ? task.due.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-    })
+    ? task.due.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
     : "No date";
 
   return (
     <>
       <DropIndicator beforeId={task.id} column={task.status} />
-
       <motion.div
         draggable="true"
         onDragStart={(e) => handleDragStart(e, task)}
         onDoubleClick={() => onEdit(task)}
         className="group relative bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-zinc-600 hover:shadow-xl transition-all cursor-grab active:cursor-grabbing"
       >
-        {/* Top Row */}
         <div className="flex items-start justify-between gap-3">
-          <p
-            className={`text-sm font-medium leading-snug pr-2 ${done ? "line-through text-zinc-600" : "text-white"
-              }`}
-          >
+          <p className={`text-sm font-medium leading-snug pr-2 ${done ? "line-through text-zinc-600" : "text-white"}`}>
             {task.title}
           </p>
-
           <span
             className={`text-[10px] px-2 py-1 rounded-full whitespace-nowrap font-semibold
-${task.priority === "High"
+              ${task.priority === "High"
                 ? "bg-orange-600/20 text-orange-500"
                 : task.priority === "Medium"
                   ? "bg-amber-500/20 text-amber-400"
                   : "bg-cyan-500/20 text-cyan-400"
-              }
-
-`}
+              }`}
           >
             {task.priority}
           </span>
         </div>
 
-        {/* Description */}
         {task.description && (
           <p className="text-xs text-zinc-400 mt-2 line-clamp-2 leading-relaxed">
             {task.description}
           </p>
         )}
 
-        {/* Project */}
         <div className="flex items-center gap-2 mt-3">
-          <span className="text-[11px] text-zinc-500">
-            {task.project}
-          </span>
+          <span className="text-[11px] text-zinc-500">{task.project}</span>
         </div>
 
-        {/* Bottom Row */}
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-3">
-            <span className="text-[11px] text-zinc-500">
-              📅 {dueLabel}
-            </span>
-
+            <span className="text-[11px] text-zinc-500">📅 {dueLabel}</span>
             <AvatarStack assignees={task.assignees} />
           </div>
-
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(task);
-            }}
+            onClick={(e) => { e.stopPropagation(); onEdit(task); }}
             className="text-zinc-500 hover:text-white transition"
           >
             <PiNotePencilBold size={16} />
@@ -351,11 +314,7 @@ const Column = ({ col, tasks, setTasks, openModal, openEdit }) => {
     </div>
   );
 };
-const handleAddMember = async (userId) => {
-  const res = await addMemberToProject(activeProject._id, userId);
 
-  setMembers(res.data.data.members);
-};
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function MyTasks() {
@@ -367,12 +326,17 @@ export default function MyTasks() {
   const [newStatus, setNewStatus] = useState("todo");
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-<<<<<<< HEAD
-  const { projects, activeProject, setActiveProject, members } = useProjects();
-=======
   const [showMemberModal, setShowMemberModal] = useState(false);
-  const { projects, activeProject, setActiveProject, fetchMembers, projectMembers } = useProjects();
->>>>>>> 332f7b5 (added add member feature)
+
+  // FIX: destructure addMemberToProject from context (must be exposed there),
+  // and projectMembers to use in place of the missing `members` local state
+  const {
+    projects,
+    activeProject,
+    setActiveProject,
+    fetchMembers,
+    projectMembers,
+  } = useProjects();
 
   // fetch tasks whenever activeProject changes
   useEffect(() => {
@@ -383,7 +347,7 @@ export default function MyTasks() {
         setError(null);
         const res = await fetchTasks(activeProject._id);
         setTasks(res.data.data.map((t) => formatTask(t, activeProject.name, activeProject.color)));
-        await fetchMembers(activeProject._id); // ← add this line
+        await fetchMembers(activeProject._id);
       } catch (err) {
         console.error("Failed to fetch tasks", err);
         setError("Failed to load tasks");
@@ -392,11 +356,14 @@ export default function MyTasks() {
       }
     };
     load();
-  }, [activeProject]);
+  }, [activeProject]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = search.trim()
     ? tasks.filter((t) => t.title.toLowerCase().includes(search.toLowerCase()))
     : tasks;
+
+  // FIX: derive members for the active project from context instead of missing local state
+  const members = activeProject ? (projectMembers[activeProject._id] ?? []) : [];
 
   return (
     <div className="p-6 flex flex-col gap-5">
@@ -413,7 +380,6 @@ export default function MyTasks() {
             </p>
           </div>
 
-          {/* Project dropdown sits right next to the title */}
           <ProjectDropdown
             projects={projects}
             activeProject={activeProject}
@@ -424,14 +390,15 @@ export default function MyTasks() {
         {activeProject && (
           <button
             onClick={() => setShowMemberModal(true)}
-            className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors">
+            className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
+          >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             Add member
-            {(projectMembers[activeProject._id]?.length ?? 0) > 0 && (
+            {members.length > 0 && (
               <span className="bg-blue-500/30 text-blue-200 text-xs px-1.5 py-0.5 rounded-full">
-                {projectMembers[activeProject._id].length}
+                {members.length}
               </span>
             )}
           </button>
@@ -452,7 +419,7 @@ export default function MyTasks() {
         </div>
       )}
 
-      {/* ── Empty state (no projects at all) ── */}
+      {/* ── Empty state ── */}
       {!loading && !error && !activeProject && (
         <div className="flex flex-col items-center justify-center py-24 gap-3 border border-dashed border-zinc-800 rounded-2xl">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-700">
@@ -498,6 +465,7 @@ export default function MyTasks() {
               />
             ))}
           </div>
+
           {showModal && (
             <TaskModal
               status={newStatus}
@@ -505,26 +473,20 @@ export default function MyTasks() {
               onSave={async (taskData) => {
                 try {
                   const res = await createTask(activeProject._id, taskData);
-
-                  const formattedTask = formatTask(
-                    res.data.data,
-                    activeProject.name,
-                    activeProject.color
-                  );
-
+                  const formattedTask = formatTask(res.data.data, activeProject.name, activeProject.color);
                   setTasks((prev) => [formattedTask, ...prev]);
                   setShowModal(false);
-
                 } catch (error) {
                   console.error("Task create failed:", error);
                 }
               }}
             />
           )}
+
           {showEditModal && editingTask && (
             <EditTaskModal
               task={editingTask}
-              members={members}
+              members={members}  // FIX: now correctly sourced from projectMembers context
               onClose={() => {
                 setShowEditModal(false);
                 setEditingTask(null);
@@ -541,26 +503,15 @@ export default function MyTasks() {
               }}
               onSave={async (data) => {
                 const res = await updateTask(editingTask.id, data);
-
-                const updated = formatTask(
-                  res.data.data,
-                  activeProject.name,
-                  activeProject.color
-                );
-
-                setTasks((prev) =>
-                  prev.map((t) =>
-                    t.id === editingTask.id ? updated : t
-                  )
-                );
-
+                const updated = formatTask(res.data.data, activeProject.name, activeProject.color);
+                setTasks((prev) => prev.map((t) => t.id === editingTask.id ? updated : t));
                 setShowEditModal(false);
                 setEditingTask(null);
-
                 return true;
               }}
             />
           )}
+
           {showMemberModal && activeProject && (
             <AddMemberModal
               projectId={activeProject._id}
@@ -570,6 +521,5 @@ export default function MyTasks() {
         </>
       )}
     </div>
-
   );
 }

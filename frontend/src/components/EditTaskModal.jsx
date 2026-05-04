@@ -14,7 +14,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useProjects } from "../context/Projectscontext.jsx";
-import  addMemberToProject  from "../services/Api.js"; // ← FIX 1: import the missing function
+import { addMembersToProject } from "../services/Api.js";
 
 // ─── constants ────────────────────────────────────────────────────────────────
 
@@ -131,7 +131,18 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
   const [memberInput, setMemberInput] = useState("");
 
   const fileRef = useRef(null);
-  const { setMembers, activeProject } = useProjects();
+  const { activeProject, fetchMembers } = useProjects();
+
+  const assigneeOptions = members
+    .map((member) => {
+      const user = member?.user ?? member;
+      if (!user?._id) return null;
+      return {
+        id: user._id,
+        label: user.username || user.fullName || "Unknown user",
+      };
+    })
+    .filter(Boolean);
 
   // ── handlers ───────────────────────────────────────────────────────────────
 
@@ -196,8 +207,8 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
   const handleAddMember = async () => {
     if (!memberInput.trim()) return;
     try {
-      const res = await addMemberToProject(activeProject._id, memberInput);
-      setMembers(res.data.data.members);
+      await addMembersToProject(activeProject._id, memberInput);
+      await fetchMembers(activeProject._id);
       setMemberInput("");
       setShowAddMember(false);
     } catch (err) {
@@ -299,8 +310,8 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
                            hover:bg-white/[0.06] transition-colors"
               >
                 <option value="">Unassigned</option>
-                {members.map((m) => (
-                  <option key={m._id} value={m._id}>{m.username}</option>
+                {assigneeOptions.map((m) => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
                 ))}
               </select>
             </div>

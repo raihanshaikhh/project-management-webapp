@@ -47,14 +47,14 @@ const taskSchema = new Schema(
     status: {
       type: String,
       enum: AvailableTaskStatus,
-      default: "todo",
+      default: "To Do",
     },
 
     attachments: {
-     name: String,
-    size: String,
-    url: String,
-    mimetype: String,
+      name: String,
+      size: String,
+      url: String,
+      mimetype: String,
     },
 
     links: {

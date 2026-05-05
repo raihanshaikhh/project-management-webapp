@@ -15,6 +15,7 @@ const BADGE = {
   "Done": "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
 };
 
+
 const getGreeting = () => {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -121,11 +122,13 @@ const Dashboard = () => {
           </p>
           <div className="flex flex-col">
             {dashboardData?.myTasks?.map((task, i) => {
+              console.log(task.status);
+              
               const done = task.status === "Done";
               return (
                 <div
-                  key={task.id}
-                  className={`flex items-start gap-4 py-4 transition-opacity ${i < task.length - 1 ? "border-b border-zinc-800/50" : ""
+                  key={task._id}
+                  className={`flex items-start gap-4 py-4 transition-opacity ${i < dashboardData.myTasks.length - 1 - 1 ? "border-b border-zinc-800/50" : ""
                     } ${done ? "opacity-60" : "opacity-100"}`}
                 >
                   {/* Checkbox */}
@@ -190,7 +193,7 @@ const Dashboard = () => {
               return (
                 <div
                   key={proj._id || proj.name}
-                  className={`py-4 ${i < dashboard.projects.length - 1
+                  className={`py-4 ${i < dashboardData.projects.length - 1
                       ? "border-b border-zinc-800/50"
                       : ""
                     }`}

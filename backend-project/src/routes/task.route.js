@@ -4,6 +4,7 @@ import {
   updateTasks, deleteTasks,
   createSubTasks, updateSubTasks, deleteSubTasks
 } from "../controller/task.controller.js"
+
 import { verifyJWT } from "../middlewares/auth.midleware.js";
 
 const router = Router()
@@ -19,6 +20,7 @@ router.delete("/tasks/:taskId", deleteTasks)
 
 router.post("/tasks/:taskId/subtasks", createSubTasks)
 router.patch("/subtasks/:subtaskId", updateSubTasks)
-router.delete("/subtasks/:subTaskId", deleteSubTasks)  // ✅ fixed param name consistency
+router.delete("/subtasks/:subTaskId", deleteSubTasks)
+
 
 export default router;

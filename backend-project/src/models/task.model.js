@@ -47,7 +47,7 @@ const taskSchema = new Schema(
     status: {
       type: String,
       enum: AvailableTaskStatus,
-      default: "To Do",
+      default: "todo",
     },
 
     attachments: {

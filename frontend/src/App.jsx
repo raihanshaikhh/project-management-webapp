@@ -7,7 +7,27 @@ import Inbox from "./pages/Inbox.jsx";
 import Calendar from "./pages/Calendar.jsx";
 import ProtectedRoute from "./Routes/ProtectedRoutes.jsx";
 import AppProviders from "./AppProvider.jsx";
+import socket from "./services/Socket.js";
+import { useEffect } from "react";
+
+
+  
+
 function App() {
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("Connected to socket:", socket.id);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  
+
+
+
   return (
     <Routes>
       <Route path="/" element={<Auth />} />

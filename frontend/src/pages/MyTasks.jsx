@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchTasks, updateTask, createTask, deleteTask } from "../services/Api.js";
+import socket from "../services/socket.js";
 import { useProjects } from "../context/Projectscontext.jsx";
 import TaskModal from "../components/TaskModal.jsx";
 import EditTaskModal from "../components/EditTaskModal.jsx";
@@ -357,6 +358,35 @@ export default function MyTasks() {
     };
     load();
   }, [activeProject]); // eslint-disable-line react-hooks/exhaustive-deps
+useEffect(() => {
+  if (!activeProject?._id) return;
+
+  const projectId = String(activeProject._id);
+  socket.emit("joinProject", projectId);
+
+  const handleTaskUpdated = async (data) => {
+    // Guard against ObjectId/string mismatch.
+    if (String(data?.projectId) !== projectId) return;
+
+    try {
+      const res = await fetchTasks(projectId);
+      setTasks(
+        res.data.data.map((t) =>
+          formatTask(t, activeProject.name, activeProject.color)
+        )
+      );
+    } catch (err) {
+      console.error("Socket refetch failed", err);
+    }
+  };
+
+  socket.on("taskUpdated", handleTaskUpdated);
+
+  return () => {
+    socket.emit("leaveProject", projectId);
+    socket.off("taskUpdated", handleTaskUpdated);
+  };
+}, [activeProject]);
 
   const filtered = search.trim()
     ? tasks.filter((t) => t.title.toLowerCase().includes(search.toLowerCase()))
@@ -520,6 +550,7 @@ export default function MyTasks() {
           )}
         </>
       )}
+      
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { ApiResponse } from "../utils/api-response.js"
 import asyncHandler from "../utils/asyn-handler.js"
 import mongoose from "mongoose"
 import { Project } from "../models/project.model.js"
-import { Priority } from "../utils/costants.js"
+import { Priority, TaskStatusEnum } from "../utils/costants.js"
 
 const getTasks = asyncHandler(async (req, res) => {
   const { projectId } = req.params
@@ -147,7 +147,12 @@ const updateTasks = asyncHandler(async (req, res) => {
   ).populate("assignedTo", "username fullName avatar");
 
   if (!task) throw new ApiError(404, "Task not found");
-
+  const io = req.app.get("io");
+  const projectId = String(task.project);
+  io.to(`project:${projectId}`).emit("taskUpdated", {
+    projectId,
+    task
+  });
   return res
     .status(200)
     .json(new ApiResponse(200, task, "Task updated successfully"));

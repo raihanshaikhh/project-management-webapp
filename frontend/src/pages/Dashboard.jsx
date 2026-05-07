@@ -9,10 +9,32 @@ import API from "../services/Api.js";
 
 
 // High-contrast, vibrant glassmorphism inspired badges
+// Backend sends task.status as `todo | in_progress | done` (snake_case),
+// but we also support legacy `To Do | In Progress | Done` values.
 const BADGE = {
+  // normalized
+  todo: "bg-zinc-800 text-zinc-300 border border-zinc-700",
+  in_progress: "bg-blue-500/15 text-blue-400 border border-blue-500/30",
+  done: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+
+  // legacy labels
   "To Do": "bg-zinc-800 text-zinc-300 border border-zinc-700",
   "In Progress": "bg-blue-500/15 text-blue-400 border border-blue-500/30",
-  "Done": "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+  Done: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+};
+
+const normalizeStatus = (status) => {
+  const s = String(status ?? "").trim();
+  if (s === "todo" || s === "To Do") return "todo";
+  if (s === "in_progress" || s === "In Progress") return "in_progress";
+  if (s === "done" || s === "Done") return "done";
+  return s; // fallback: keeps old behavior
+};
+
+const STATUS_LABEL = {
+  todo: "To Do",
+  in_progress: "In Progress",
+  done: "Done",
 };
 
 
@@ -122,9 +144,8 @@ const Dashboard = () => {
           </p>
           <div className="flex flex-col">
             {dashboardData?.myTasks?.map((task, i) => {
-              console.log(task.status);
-              
-              const done = task.status === "Done";
+              const normalized = normalizeStatus(task.status);
+              const done = normalized === "done";
               return (
                 <div
                   key={task._id}
@@ -169,10 +190,11 @@ const Dashboard = () => {
 
                   {/* Badge */}
                   <span
-                    className={`text-[10px] px-3 py-1 rounded-lg ${BADGE[task.status]
-                      }`}
+                    className={`text-[10px] px-3 py-1 rounded-lg ${
+                      BADGE[normalized] ?? ""
+                    }`}
                   >
-                    {task.status}
+                    {STATUS_LABEL[normalized] ?? task.status}
                   </span>
                 </div>
               );

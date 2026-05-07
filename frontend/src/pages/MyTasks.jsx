@@ -10,7 +10,7 @@ import AddMemberModal from "../components/AddmemberModal.jsx";
 
 const COLUMNS = [
   { id: "todo", label: "To do", accent: "#378ADD" },
-  { id: "doing", label: "In Progress", accent: "#EF9F27" },
+  { id: "in_progress", label: "In Progress", accent: "#EF9F27" },
   { id: "done", label: "Done", accent: "#1D9E75" },
 ];
 
@@ -20,8 +20,23 @@ const AVATAR_COLORS = {
   SP: "bg-amber-600/30 text-amber-400",
 };
 
-const toColumnId = (s) => s === "in_progress" ? "doing" : s === "done" ? "done" : "todo";
-const toBackendStatus = (c) => c === "doing" ? "in_progress" : c === "done" ? "done" : "todo";
+// Map backend status -> column id (1:1 in your case)
+const toColumnId = (status) => {
+  if (!status) return "todo";
+  const s = String(status);
+  if (s === "in_progress") return "in_progress";
+  if (s === "done") return "done";
+  return "todo";
+};
+
+// Map column id -> backend status (also 1:1)
+const toBackendStatus = (columnId) => {
+  if (!columnId) return "todo";
+  const c = String(columnId);
+  if (c === "in_progress") return "in_progress";
+  if (c === "done") return "done";
+  return "todo";
+};
 
 const getInitials = (user) => {
   if (!user) return "ME";

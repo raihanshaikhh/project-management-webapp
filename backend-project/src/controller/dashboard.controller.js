@@ -17,12 +17,12 @@ export const getDashboard = async (req, res) => {
       assignedTo: userId,
     }).populate("project", "name");
 
-    const openTasks = tasks.filter(t => t.status !== "Done").length;
+    const openTasks = tasks.filter(t => t.status !== "done").length;
 
     const taskCounts = {
-      todo: tasks.filter(t => t.status === "To Do").length,
-      in_progress: tasks.filter(t => t.status === "In Progress").length,
-      done: tasks.filter(t => t.status === "Done").length,
+      todo: tasks.filter(t => t.status === "todo").length,
+      in_progress: tasks.filter(t => t.status === "in_progress").length,
+      done: tasks.filter(t => t.status === "done").length,
     };
 
     // Recent tasks (limit 12)

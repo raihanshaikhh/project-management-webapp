@@ -69,8 +69,8 @@ const BOTTOM_ITEMS = [
   },
 ];
 
-const navClass = ({ isActive }) =>
-  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+const navClass = (compact) => ({ isActive }) =>
+  `flex items-center ${compact ? "justify-center" : "gap-3"} px-3 py-2 rounded-lg text-sm transition-all ${
     isActive
       ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
       : 'text-slate-400 hover:bg-blue-950 hover:text-zinc-100'
@@ -104,63 +104,68 @@ export default function Sidebar() {
         </button>
       </div>
 
+      {/* Brand */}
       {isOpen && (
-        <>
-          {/* Brand */}
-          <div className="px-4 pb-4 border-b border-zinc-800">
-            <BrandHeader />
-          </div>
-
-          {/* Main nav */}
-          <div className="mt-4 px-2 flex flex-col gap-0.5">
-            <p className="text-[10px] font-medium uppercase tracking-widest px-2 mb-1 text-zinc-300">
-              Main
-            </p>
-            {NAV_ITEMS.map(({ label, icon, badge, path }) => (
-              <NavLink key={label} to={path} className={navClass}>
-                <span className="shrink-0">{icon}</span>
-                <span className="flex-1">{label}</span>
-                {badge && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400">
-                    {badge}
-                  </span>
-                )}
-              </NavLink>
-            ))}
-          </div>
-
-          <div className="mx-3 my-3 border-t border-zinc-800" />
-
-          {/* Projects — now fully dynamic via ProjectsContext */}
-          <div className="px-2 flex-1 overflow-y-auto">
-           
-            <ProjectsList />
-          </div>
-
-          <div className="mx-3 my-3 border-t border-zinc-800" />
-
-          {/* Bottom nav */}
-          <div className="px-2 flex flex-col gap-0.5">
-            {BOTTOM_ITEMS.map(({ label, icon, path }) => (
-              <NavLink key={label} to={path} className={navClass}>
-                <span className="shrink-0">{icon}</span>
-                <span>{label}</span>
-              </NavLink>
-            ))}
-          </div>
-
-          {/* User row */}
-          <div className="mx-2 mt-2 mb-3 p-2 rounded-md flex items-center gap-3 hover:bg-blue-950 cursor-pointer transition-colors">
-            <div className="w-7 h-7 rounded-full bg-blue-600/25 flex items-center justify-center text-blue-400 text-xs font-medium shrink-0">
-              RH
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-white text-sm font-medium truncate">Raihan</p>
-              <p className="text-zinc-500 text-xs truncate">Developer</p>
-            </div>
-          </div>
-        </>
+        <div className="px-4 pb-4 border-b border-zinc-800">
+          <BrandHeader />
+        </div>
       )}
+
+      {/* Main nav */}
+      <div className={`${isOpen ? "mt-4" : "mt-2"} px-2 flex flex-col gap-0.5`}>
+        {isOpen && (
+          <p className="text-[10px] font-medium uppercase tracking-widest px-2 mb-1 text-zinc-300">
+            Main
+          </p>
+        )}
+        {NAV_ITEMS.map(({ label, icon, badge, path }) => (
+          <NavLink key={label} to={path} className={navClass(!isOpen)} title={!isOpen ? label : undefined}>
+            <span className="shrink-0">{icon}</span>
+            {isOpen && <span className="flex-1">{label}</span>}
+            {isOpen && badge && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400">
+                {badge}
+              </span>
+            )}
+          </NavLink>
+        ))}
+      </div>
+
+      <div className="mx-3 my-3 border-t border-zinc-800" />
+
+      {/* Projects — now fully dynamic via ProjectsContext */}
+      {isOpen ? (
+        <div className="px-2 flex-1 overflow-y-auto">
+          <ProjectsList />
+        </div>
+      ) : (
+        <div className="flex-1" />
+      )}
+
+      <div className="mx-3 my-3 border-t border-zinc-800" />
+
+      {/* Bottom nav */}
+      <div className="px-2 flex flex-col gap-0.5">
+        {BOTTOM_ITEMS.map(({ label, icon, path }) => (
+          <NavLink key={label} to={path} className={navClass(!isOpen)} title={!isOpen ? label : undefined}>
+            <span className="shrink-0">{icon}</span>
+            {isOpen && <span>{label}</span>}
+          </NavLink>
+        ))}
+      </div>
+
+      {/* User row */}
+      <div className={`mx-2 mt-2 mb-3 p-2 rounded-md flex items-center ${isOpen ? "gap-3" : "justify-center"} hover:bg-blue-950 cursor-pointer transition-colors`}>
+        <div className="w-7 h-7 rounded-full bg-blue-600/25 flex items-center justify-center text-blue-400 text-xs font-medium shrink-0">
+          RH
+        </div>
+        {isOpen && (
+          <div className="overflow-hidden">
+            <p className="text-white text-sm font-medium truncate">Raihan</p>
+            <p className="text-zinc-500 text-xs truncate">Developer</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

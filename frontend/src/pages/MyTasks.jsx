@@ -7,6 +7,7 @@ import TaskModal from "../components/TaskModal.jsx";
 import EditTaskModal from "../components/EditTaskModal.jsx";
 import { PiNotePencilBold } from "react-icons/pi";
 import AddMemberModal from "../components/AddmemberModal.jsx";
+import toast from "react-hot-toast";
 
 const COLUMNS = [
   { id: "todo", label: "To do", accent: "#378ADD" },
@@ -280,6 +281,7 @@ const Column = ({ col, tasks, setTasks, openModal, openEdit }) => {
       await updateTask(taskId, { status: toBackendStatus(col.id) });
     } catch (err) {
       console.error("Failed to update task status", err);
+      toast.error("Failed to update task");
     }
   };
 
@@ -367,6 +369,7 @@ export default function MyTasks() {
       } catch (err) {
         console.error("Failed to fetch tasks", err);
         setError("Failed to load tasks");
+        toast.error("Failed to load tasks");
       } finally {
         setLoading(false);
       }
@@ -521,8 +524,10 @@ useEffect(() => {
                   const formattedTask = formatTask(res.data.data, activeProject.name, activeProject.color);
                   setTasks((prev) => [formattedTask, ...prev]);
                   setShowModal(false);
+                  toast.success("Task created");
                 } catch (error) {
                   console.error("Task create failed:", error);
+                  toast.error("Task creation failed");
                 }
               }}
             />
@@ -542,17 +547,26 @@ useEffect(() => {
                   setTasks((prev) => prev.filter((t) => t.id !== editingTask.id));
                   setShowEditModal(false);
                   setEditingTask(null);
+                  toast.success("Task deleted");
                 } catch (err) {
                   console.error("Failed to delete task", err);
+                  toast.error("Failed to delete task");
                 }
               }}
               onSave={async (data) => {
-                const res = await updateTask(editingTask.id, data);
-                const updated = formatTask(res.data.data, activeProject.name, activeProject.color);
-                setTasks((prev) => prev.map((t) => t.id === editingTask.id ? updated : t));
-                setShowEditModal(false);
-                setEditingTask(null);
-                return true;
+                try {
+                  const res = await updateTask(editingTask.id, data);
+                  const updated = formatTask(res.data.data, activeProject.name, activeProject.color);
+                  setTasks((prev) => prev.map((t) => t.id === editingTask.id ? updated : t));
+                  setShowEditModal(false);
+                  setEditingTask(null);
+                  toast.success("Task updated");
+                  return true;
+                } catch (err) {
+                  console.error("Failed to update task", err);
+                  toast.error("Failed to update task");
+                  return false;
+                }
               }}
             />
           )}

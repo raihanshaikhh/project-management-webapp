@@ -9,21 +9,6 @@ import mongoose from "mongoose"
 import { Project } from "../models/project.model.js"
 import { Priority, TaskStatusEnum, UserRolesEnum } from "../utils/costants.js"
 
-const assertProjectAdminAccess = async (projectId, userId) => {
-  const projectMember = await ProjectMember.findOne({
-    project: new mongoose.Types.ObjectId(projectId),
-    user: new mongoose.Types.ObjectId(userId)
-  })
-
-  if (!projectMember) {
-    throw new ApiError(403, "You are not a member of this project")
-  }
-
-  const allowedRoles = [UserRolesEnum.PROJECT_ADMIN, UserRolesEnum.ADMIN]
-  if (!allowedRoles.includes(projectMember.role)) {
-    throw new ApiError(403, "Only project admin can perform this action")
-  }
-}
 
 const getTasks = asyncHandler(async (req, res) => {
   const { projectId } = req.params
@@ -44,7 +29,7 @@ const createTasks = asyncHandler(async (req, res) => {
 
   const project = await Project.findById(projectId)
   if (!project) throw new ApiError(404, "Project not found")
-  await assertProjectAdminAccess(projectId, req.user._id)
+
 
   const files = req.files || []
   const attachments = files.map((file) => ({
@@ -117,9 +102,7 @@ const updateTasks = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid Task Id");
   }
 
-  const existingTask = await Task.findById(taskId)
-  if (!existingTask) throw new ApiError(404, "Task not found");
-  await assertProjectAdminAccess(existingTask.project, req.user._id)
+
 
   // FIX 1: separate $set and $unset so that sending assignedTo: null
   // actually clears the field in MongoDB instead of being silently ignored
@@ -187,7 +170,7 @@ const deleteTasks = asyncHandler(async (req, res) => {
   const task = await Task.findById(taskId)
   if (!task) throw new ApiError(404, "Task not found")
 
-  await assertProjectAdminAccess(task.project, req.user._id)
+
 
   await Task.findByIdAndDelete(taskId)
 

@@ -1,57 +1,59 @@
 import React, { useState } from 'react';
 import { useProjects } from '../context/Projectscontext';
+import toast from "react-hot-toast";
 
 const COLOR_OPTIONS = [
   '#378ADD', '#1D9E75', '#D85A30', '#D4537E',
   '#BA7517', '#7C3AED', '#0EA5E9', '#10B981',
 ];
-const Toast = ({ message, onClose, undo }) => (
-  <div className="fixed bottom-4 left-4/5 transform -translate-x-1/2 bg-black text-zinc-300 px-4 py-2 rounded shadow">
-    {message}
-    {undo && (
-      <button onClick={undo} className="ml-4 underline">
-        Undo
-      </button>
-    )}
-    <button onClick={onClose} className="ml-4 text-sm opacity-70 hover:opacity-100">
-      Dismiss
-    </button>
-  </div>
-);
 export default function ProjectsList({ compact = false }) {
   const { projects, addProject, removeProject, activeProject, setActiveProject } = useProjects();
   const [showForm, setShowForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(COLOR_OPTIONS[0]);
   const [newDescription, setNewDescription] = useState('');
-  const [toast, setToast] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
-  const [lastDeleted, setLastDeleted] = useState(null);
 
- const handleDelete = (_id) => {
-  const deletedProject = projects.find(p => p._id === _id);
-
-  removeProject(_id);
-
-  setToast({
-    message: "Project deleted",
-   undo: () => {
-  if (lastDeleted) {
-    addProject(lastDeleted.name, lastDeleted.description, lastDeleted.color);
+ const handleDelete = async (_id) => {
+  const deletedProject = projects.find((p) => p._id === _id);
+  try {
+    await removeProject(_id);
+    toast((t) => (
+      <div className="flex items-center gap-3">
+        <span>Project deleted</span>
+        {deletedProject && (
+          <button
+            onClick={async () => {
+              try {
+                await addProject(deletedProject.name, deletedProject.description, deletedProject.color);
+                toast.dismiss(t.id);
+                toast.success("Project restored");
+              } catch {
+                toast.error("Failed to restore project");
+              }
+            }}
+            className="text-blue-400 hover:text-blue-300 text-xs"
+          >
+            Undo
+          </button>
+        )}
+      </div>
+    ));
+  } catch {
+    toast.error("Failed to delete project");
   }
-  setLastDeleted(deletedProject);
-}
-  });
-
-  setTimeout(() => setToast(null), 5000);
 };
   const handleAdd = () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
-    addProject(trimmed, newDescription);
-    setNewName('');
-    setNewColor(COLOR_OPTIONS[0]);
-    setShowForm(false);
+    addProject(trimmed, newDescription)
+      .then(() => {
+        toast.success("Project created");
+        setNewName('');
+        setNewColor(COLOR_OPTIONS[0]);
+        setShowForm(false);
+      })
+      .catch(() => toast.error("Failed to create project"));
   };
 
   const handleKeyDown = (e) => {
@@ -154,14 +156,6 @@ export default function ProjectsList({ compact = false }) {
           </button>
         </div>
       ))}
-      {toast && (
-        <Toast
-          message={toast.message}
-          undo={toast.undo}
-          onClose={() => setToast(null)}
-        />
-      )}
-
       {projects.length === 0 && (
         <p className="text-xs text-zinc-600 px-3 py-2 italic">No projects yet.</p>
       )}

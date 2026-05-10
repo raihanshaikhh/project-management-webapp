@@ -5,6 +5,7 @@ import DashboardLayout from "./components/layout/DashboardLayout.jsx";
 import MyTasks from "./pages/MyTasks.jsx";
 import Inbox from "./pages/Inbox.jsx";
 import Calendar from "./pages/Calendar.jsx";
+import Settings from "./pages/setting/Setting.jsx";
 import ProtectedRoute from "./Routes/ProtectedRoutes.jsx";
 import AppProviders from "./AppProvider.jsx";
 import socket from "./services/Socket.js";
@@ -40,6 +41,7 @@ function App() {
           <Route path="tasks" element={<MyTasks />} />
           <Route path="inbox" element={<Inbox />} />
           <Route path="calendar" element={<Calendar />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Route>
       </Route>

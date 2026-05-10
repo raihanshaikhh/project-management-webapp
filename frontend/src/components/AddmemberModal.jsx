@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProjects } from "../context/Projectscontext.jsx";
+import toast from "react-hot-toast";
 
 export default function AddMemberModal({ projectId, onClose }) {
   const { addMember, removeMember, projectMembers } = useProjects();
@@ -18,8 +19,11 @@ export default function AddMemberModal({ projectId, onClose }) {
     try {
       await addMember(projectId, email, role);
       setEmail("");
+      toast.success("Member invited");
     } catch (err) {
-      setError(err.response?.data?.message || "User not found");
+      const message = err.response?.data?.message || "User not found";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -28,8 +32,10 @@ export default function AddMemberModal({ projectId, onClose }) {
   const handleRemove = async (userId) => {
     try {
       await removeMember(projectId, userId);
+      toast.success("Member removed");
     } catch (err) {
       setError("Failed to remove member");
+      toast.error("Failed to remove member");
     }
   };
 

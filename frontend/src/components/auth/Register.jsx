@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../services/Api.js";
+import toast from "react-hot-toast";
 
 export default function Register({ form, onChange, onSwitch }) {
   const [error, setError] = useState(null);
@@ -19,6 +20,12 @@ export default function Register({ form, onChange, onSwitch }) {
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    if (form.password !== form.confirm) {
+      setError("Passwords do not match");
+      toast.error("Passwords do not match");
+      return;
+    }
+
     setError(null);
     setLoading(true);
     try {
@@ -27,14 +34,13 @@ export default function Register({ form, onChange, onSwitch }) {
         email: form.email,
         password: form.password,
       });
-       if (form.password !== form.confirm) {
-    setError("Passwords do not match");
-    return;
-  }
       localStorage.setItem("token", res.data.token);
+      toast.success("Account created");
       navigate("/app/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      const message = err.response?.data?.message || "Registration failed";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useProjects } from "../context/Projectscontext.jsx";
 import { addMembersToProject } from "../services/Api.js";
+import toast from "react-hot-toast";
 
 // ─── constants ────────────────────────────────────────────────────────────────
 
@@ -211,8 +212,10 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
       await fetchMembers(activeProject._id);
       setMemberInput("");
       setShowAddMember(false);
+      toast.success("Member added");
     } catch (err) {
       console.error("Failed to add member", err);
+      toast.error("Failed to add member");
     }
   };
 

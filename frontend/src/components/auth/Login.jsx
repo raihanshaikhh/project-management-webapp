@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../services/Api.js";
+import toast from "react-hot-toast";
 
 export default function Login({ form, onChange, onSwitch }) {
   const [error, setError] = useState(null);
@@ -26,9 +27,12 @@ export default function Login({ form, onChange, onSwitch }) {
         password: form.password,
       });
       localStorage.setItem("token", res.data.token);
+      toast.success("Logged in");
       navigate("/app/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      const message = err.response?.data?.message || "Login failed";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

@@ -111,7 +111,7 @@ function LinkItem({ link, onRemove }) {
 
 // ─── main component ───────────────────────────────────────────────────────────
 
-export default function EditTaskModal({ task = {}, members = [], onClose, onSave, onDelete }) {
+export default function EditTaskModal({ task = {}, members = [], onClose, onSave, onDelete, isProjectAdmin = false }) {
 
   // ── state ──────────────────────────────────────────────────────────────────
   const [title, setTitle] = useState(task.title || "");
@@ -429,7 +429,7 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-white/[0.06] flex items-center justify-between">
-          {confirmDelete ? (
+        { isProjectAdmin && (confirmDelete ? (
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-zinc-500">Sure?</span>
               <button
@@ -448,7 +448,7 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
                 Cancel
               </button>
             </div>
-          ) : (
+            ) : (
             <button
               onClick={() => setConfirmDelete(true)}
               className="flex items-center gap-1.5 h-9 px-3.5 rounded-[10px] border border-red-500/20
@@ -458,7 +458,8 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
               <Trash2 size={13} />
               Delete Task
             </button>
-          )}
+          ))}
+          
 
           <div className="flex gap-2">
             <button

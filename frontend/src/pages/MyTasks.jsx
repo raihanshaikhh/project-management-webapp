@@ -9,6 +9,8 @@ import { PiNotePencilBold } from "react-icons/pi";
 import AddMemberModal from "../components/AddmemberModal.jsx";
 import toast from "react-hot-toast";
 
+
+
 const COLUMNS = [
   { id: "todo", label: "To do", accent: "#378ADD" },
   { id: "in_progress", label: "In Progress", accent: "#EF9F27" },
@@ -336,6 +338,7 @@ const Column = ({ col, tasks, setTasks, openModal, openEdit }) => {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function MyTasks() {
+  const user = JSON.parse(localStorage.getItem("user"));
   const [tasks, setTasks] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -376,35 +379,35 @@ export default function MyTasks() {
     };
     load();
   }, [activeProject]); // eslint-disable-line react-hooks/exhaustive-deps
-useEffect(() => {
-  if (!activeProject?._id) return;
+  useEffect(() => {
+    if (!activeProject?._id) return;
 
-  const projectId = String(activeProject._id);
-  socket.emit("joinProject", projectId);
+    const projectId = String(activeProject._id);
+    socket.emit("joinProject", projectId);
 
-  const handleTaskUpdated = async (data) => {
-    // Guard against ObjectId/string mismatch.
-    if (String(data?.projectId) !== projectId) return;
+    const handleTaskUpdated = async (data) => {
+      // Guard against ObjectId/string mismatch.
+      if (String(data?.projectId) !== projectId) return;
 
-    try {
-      const res = await fetchTasks(projectId);
-      setTasks(
-        res.data.data.map((t) =>
-          formatTask(t, activeProject.name, activeProject.color)
-        )
-      );
-    } catch (err) {
-      console.error("Socket refetch failed", err);
-    }
-  };
+      try {
+        const res = await fetchTasks(projectId);
+        setTasks(
+          res.data.data.map((t) =>
+            formatTask(t, activeProject.name, activeProject.color)
+          )
+        );
+      } catch (err) {
+        console.error("Socket refetch failed", err);
+      }
+    };
 
-  socket.on("taskUpdated", handleTaskUpdated);
+    socket.on("taskUpdated", handleTaskUpdated);
 
-  return () => {
-    socket.emit("leaveProject", projectId);
-    socket.off("taskUpdated", handleTaskUpdated);
-  };
-}, [activeProject]);
+    return () => {
+      socket.emit("leaveProject", projectId);
+      socket.off("taskUpdated", handleTaskUpdated);
+    };
+  }, [activeProject]);
 
   const filtered = search.trim()
     ? tasks.filter((t) => t.title.toLowerCase().includes(search.toLowerCase()))
@@ -536,7 +539,10 @@ useEffect(() => {
           {showEditModal && editingTask && (
             <EditTaskModal
               task={editingTask}
-              members={members}  // FIX: now correctly sourced from projectMembers context
+              members={members}
+              isProjectAdmin={
+                String(activeProject?.createdBy) === String(user?._id)
+              }  // FIX: now correctly sourced from projectMembers context
               onClose={() => {
                 setShowEditModal(false);
                 setEditingTask(null);
@@ -579,7 +585,7 @@ useEffect(() => {
           )}
         </>
       )}
-      
+
     </div>
   );
 }

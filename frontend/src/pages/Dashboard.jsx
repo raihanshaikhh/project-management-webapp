@@ -154,7 +154,7 @@ const Dashboard = () => {
                 >
                   {/* Checkbox */}
                   <div
-                    className={`mt-1 w-5 h-5 min-w-[20px] rounded-md border-2 flex items-center justify-center transition-all ${done
+                    className={`mt-1 w-5 h-5 min-w-5 rounded-md border-2 flex items-center justify-center transition-all ${done
                       ? "bg-emerald-500 border-emerald-500"
                       : "border-zinc-700 hover:border-zinc-400"
                       }`}

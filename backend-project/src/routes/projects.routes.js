@@ -21,6 +21,8 @@ router.use(verifyJWT)
 
 router.route("/")
 .get(getProject)
+
+router.route("/workspace/:workspaceId")
 .post(createProjectValidator(), validate, createProject)
 
 router

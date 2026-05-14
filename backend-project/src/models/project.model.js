@@ -2,6 +2,12 @@ import mongoose, {Schema} from "mongoose";
 
 
 const projectSchema = new Schema({
+    
+    workspace: {
+      type: Schema.Types.ObjectId,
+      ref: "Workspace",
+      required: true,
+    },
     name:{
         type:String,
         required:true,

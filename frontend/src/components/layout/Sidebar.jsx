@@ -78,10 +78,11 @@ const navClass = (compact) => ({ isActive }) =>
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
+  
 
   return (
     <div
-      className={`bg-[#1c1c1c] min-h-screen flex flex-col transition-all duration-500 text-slate-400 ${
+      className={`bg-[#0F1115] min-h-screen flex flex-col transition-all duration-500 text-slate-400 ${
         isOpen ? 'w-64' : 'w-[60px]'
       }`}
     >

@@ -1,6 +1,7 @@
 import { User } from "../models/user.models.js"
 import { Project } from "../models/project.model.js"
 import { ProjectMember } from "../models/projectMember.model.js"
+import { Workspace } from "../models/workspace.model.js"
 import { ApiError } from "../utils/api-error.js"
 import { ApiResponse } from "../utils/api-response.js"
 import asyncHandler from "../utils/asyn-handler.js"
@@ -90,8 +91,12 @@ const getProjectById = asyncHandler(async (req, res) => {
 })
 const createProject = asyncHandler(async (req, res) => {
     const { name, description } = req.body
+    const { workspaceId } = req.params
+    console.log(workspaceId);
+    
 
     const project = await Project.create({
+        workspace: workspaceId,
         name,
         description,
         createdBy: new mongoose.Types.ObjectId(req.user._id),
@@ -164,29 +169,29 @@ const addMembersToProject = asyncHandler(async (req, res) => {
     if (!user) {
         throw new ApiError(404, "user not found")
     }
-   await ProjectMember.findOneAndUpdate(
-  {
-    user: user._id,
-    project: projectId,
-  },
-  {
-    role: role,
-  },
-  {
-    new: true,
-    upsert: true,
-  }
-), {
+    await ProjectMember.findOneAndUpdate(
+        {
+            user: user._id,
+            project: projectId,
+        },
+        {
+            role: role,
+        },
+        {
+            new: true,
+            upsert: true,
+        }
+    ), {
         user: new mongoose.Types.ObjectId(user._id),
-            project: new mongoose.Types.ObjectId(projectId),
-                role: role
+        project: new mongoose.Types.ObjectId(projectId),
+        role: role
     }, {
         new: true,
-            upsert: true,
+        upsert: true,
     }
     return res.status(200).json(new ApiResponse(200, {}, "member added succesfully"))
 
-}    )
+})
 
 
 

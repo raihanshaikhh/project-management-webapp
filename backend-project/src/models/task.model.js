@@ -5,6 +5,11 @@ import { AvailableTaskStatus } from "../utils/costants.js";
 
 const taskSchema = new Schema(
   {
+    workspace: {
+      type: Schema.Types.ObjectId,
+      ref: "Workspace",
+      required: true
+    },
     project: {
       type: Schema.Types.ObjectId,
       ref: "Project",
@@ -21,7 +26,11 @@ const taskSchema = new Schema(
       type: String,
       default: "",
     },
-
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
     priority: {
       type: String,
       enum: ["Low", "Medium", "High", "Urgent"],

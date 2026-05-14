@@ -65,7 +65,32 @@ const createProjectValidator = ()=>{
     body("description").optional(),
   ]
 }
+const createTaskValidator = () => {
+  return [
+    body("title")
+      .trim()
+      .notEmpty()
+      .withMessage("Title is required"),
 
+    body("description")
+      .optional(),
+
+    body("status")
+      .optional()
+      .isIn(["todo", "in_progress", "done"])
+      .withMessage("Invalid status"),
+
+    body("priority")
+      .optional()
+      .isIn(["Low", "Medium", "High", "Urgent"])
+      .withMessage("Invalid priority"),
+
+    body("assignedTo")
+      .optional()
+      .isMongoId()
+      .withMessage("Invalid assigned user id"),
+  ]
+}
 const addMembertoprojectValidator = () => {
   return [
     body("email")
@@ -93,6 +118,7 @@ export{
   userForgotPasswordValidator,
   userResetForgotPasswordValidator,
   createProjectValidator,
-  addMembertoprojectValidator
+  addMembertoprojectValidator,
+  createTaskValidator
   
 }

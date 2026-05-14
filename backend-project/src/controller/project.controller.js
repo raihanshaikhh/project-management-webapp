@@ -9,6 +9,10 @@ import mongoose from "mongoose"
 import { AvailableUserRole, UserRolesEnum } from "../utils/costants.js"
 import { inviteTestEmail } from "../utils/mail.js"
 const getProject = asyncHandler(async (req, res) => {
+    const { workspaceId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
+   throw new ApiError(400, "Invalid workspace id");
+}
     const project = await ProjectMember.aggregate([
         {
             $match: {
@@ -23,13 +27,21 @@ const getProject = asyncHandler(async (req, res) => {
                 as: "project",
                 pipeline: [
                     {
-                        $lookup: {
+                        $match:{
+                            workspace: new mongoose.Types.ObjectId(workspaceId)
+                        }
+                    },
+                    {
+                    $lookup: {
                             from: "projectmembers",
                             localField: "_id",
                             foreignField: "project", // ✅ singular
                             as: "projectmembers"
-                        }
+                        },
+                        
+                       
                     },
+                    
                     {
                         $addFields: {
                             members: { $size: "$projectmembers" }

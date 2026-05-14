@@ -28,12 +28,11 @@ app.use("/api/v1/healthcheck", healthCheckRouter)
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/projects", projectRouter)
 app.use("/api/v1/dashboard", dashboardRoutes);
-
+// tasks routes
 import taskRoutes from "./routes/task.route.js"
-
-app.use("/api/v1", taskRoutes)
+app.use("/api/v1/tasks", taskRoutes)
+// workspace routes
 import workspaceRoutes from "./routes/workspace.route.js"
-
 app.use("/api/v1/workspace", workspaceRoutes)
 
 ///api/v1/healthcheck is also known as home route

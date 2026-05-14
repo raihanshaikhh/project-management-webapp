@@ -19,7 +19,7 @@ const router = Router()
 
 router.use(verifyJWT)
 
-router.route("/")
+router.route("/workspace/:workspaceId")
 .get(getProject)
 
 router.route("/workspace/:workspaceId")

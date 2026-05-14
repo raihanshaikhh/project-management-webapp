@@ -23,10 +23,11 @@ const getTasks = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, tasks, "Tasks fetched successfully"))
 })
 
+
 const createTasks = asyncHandler(async (req, res) => {
   const { title, description, assignedTo, status } = req.body
   const { projectId } = req.params
-
+console.log("PROJECT ID:", projectId);
   const project = await Project.findById(projectId)
   if (!project) throw new ApiError(404, "Project not found")
 
@@ -37,10 +38,21 @@ const createTasks = asyncHandler(async (req, res) => {
     MimeType: file.mimetype,
     size: file.size
   }))
-
+  const member = await ProjectMember.findOne({
+   project: projectId,
+   user: req.user._id,
+});
+if (!member) {
+   throw new ApiError(
+      403,
+      "You are not a member of this project"
+   );
+}
   const task = await Task.create({
     title,
     description,
+    workspace: project.workspace,
+    createdBy: req.user._id,
     project: new mongoose.Types.ObjectId(projectId),
     assignedTo: assignedTo ? new mongoose.Types.ObjectId(assignedTo) : null,
     status,
@@ -53,7 +65,22 @@ const createTasks = asyncHandler(async (req, res) => {
 
 const getTaskById = asyncHandler(async (req, res) => {
   const { taskId } = req.params
+  const existingTask = await Task.findById(taskId);
 
+if (!existingTask) {
+   throw new ApiError(404, "Task not found");
+}
+const member = await ProjectMember.findOne({
+   project: existingTask.project,
+   user: req.user._id,
+});
+
+if (!member) {
+   throw new ApiError(
+      403,
+      "You are not a member of this project"
+   );
+}
   const task = await Task.aggregate([
     { $match: { _id: new mongoose.Types.ObjectId(taskId) } },
     {
@@ -109,14 +136,14 @@ const updateTasks = asyncHandler(async (req, res) => {
   const $set = {};
   const $unset = {};
 
-  if (title !== undefined)       $set.title       = title;
+  if (title !== undefined) $set.title = title;
   if (description !== undefined) $set.description = description;
-  if (status !== undefined)      $set.status      = status;
-  if (priority !== undefined)    $set.priority    = priority;
+  if (status !== undefined) $set.status = status;
+  if (priority !== undefined) $set.priority = priority;
   if (attachments !== undefined) $set.attachments = attachments;
 
   // FIX 2: removed the duplicate `links` assignment that appeared twice before
-  if (links !== undefined)       $set.links       = links;
+  if (links !== undefined) $set.links = links;
 
   // FIX 3: dueDate — allow null to clear it too, same pattern as assignedTo
   if (dueDate !== undefined) {

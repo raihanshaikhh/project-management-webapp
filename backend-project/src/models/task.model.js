@@ -59,12 +59,12 @@ const taskSchema = new Schema(
       default: "todo",
     },
 
-    attachments: {
+    attachments: [{      
       name: String,
       size: String,
       url: String,
       mimetype: String,
-    },
+    }],
 
     links: {
       type: [

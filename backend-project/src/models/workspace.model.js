@@ -7,32 +7,17 @@ const WorkspaceSchema = new Schema(
       required: true,
       trim: true,
     },
-
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-
-    members: [
-      {
-        user: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-        },
-
-        role: {
-          type: String,
-          enum: ["owner", "admin", "member"],
-          default: "member",
-        },
-
-        joinedAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
+    // ← remove the members array entirely, WorkspaceMember collection handles this
   },
   { timestamps: true }
 );

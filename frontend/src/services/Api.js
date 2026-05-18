@@ -15,6 +15,13 @@ API.interceptors.request.use((req) => {
 
   return req
 })
+// ── Workspace API calls ────────────────────────────────
+export const fetchMyWorkspace = () => API.get("/workspace");
+export const fetchWorkspaceMembers = () => API.get("/workspace/members");
+export const inviteWorkspaceMember = (email, role = "member") =>
+  API.post("/workspace/invite", { email, role });
+export const removeWorkspaceMember = (userId) =>
+  API.delete(`/workspace/members/${userId}`);
 // ── Project API calls ──────────────────────────────────
 export const fetchProjects = () => API.get("/projects")
 export const fetchProjectById = (projectId) => API.get(`/projects/${projectId}`)

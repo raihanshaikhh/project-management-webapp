@@ -7,6 +7,7 @@ import TaskModal from "../components/TaskModal.jsx";
 import EditTaskModal from "../components/EditTaskModal.jsx";
 import { PiNotePencilBold } from "react-icons/pi";
 import AddMemberModal from "../components/AddmemberModal.jsx";
+import { useWorkspace } from "../context/Workspacecontext.jsx";
 import toast from "react-hot-toast";
 
 
@@ -355,9 +356,9 @@ export default function MyTasks() {
     projects,
     activeProject,
     setActiveProject,
-    fetchMembers,
-    projectMembers,
+
   } = useProjects();
+  const {members } = useWorkspace();
 
   // fetch tasks whenever activeProject changes
   useEffect(() => {
@@ -368,7 +369,7 @@ export default function MyTasks() {
         setError(null);
         const res = await fetchTasks(activeProject._id);
         setTasks(res.data.data.map((t) => formatTask(t, activeProject.name, activeProject.color)));
-        await fetchMembers(activeProject._id);
+
       } catch (err) {
         console.error("Failed to fetch tasks", err);
         setError("Failed to load tasks");
@@ -414,7 +415,7 @@ export default function MyTasks() {
     : tasks;
 
   // FIX: derive members for the active project from context instead of missing local state
-  const members = activeProject ? (projectMembers[activeProject._id] ?? []) : [];
+  // const members = activeProject ? (projectMembers[activeProject._id] ?? []) : [];
 
   return (
     <div className="p-6 flex flex-col gap-5">
@@ -539,7 +540,6 @@ export default function MyTasks() {
           {showEditModal && editingTask && (
             <EditTaskModal
               task={editingTask}
-              members={members}
               isProjectAdmin={
                 String(activeProject?.createdBy) === String(user?._id)
               }  // FIX: now correctly sourced from projectMembers context
@@ -579,7 +579,7 @@ export default function MyTasks() {
 
           {showMemberModal && activeProject && (
             <AddMemberModal
-              projectId={activeProject._id}
+
               onClose={() => setShowMemberModal(false)}
             />
           )}

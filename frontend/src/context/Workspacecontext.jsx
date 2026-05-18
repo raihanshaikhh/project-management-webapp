@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { fetchMyWorkspace } from "../services/Api.js";
+import {
+  fetchMyWorkspace,
+  fetchWorkspaceMembers,
+  inviteWorkspaceMember,
+  removeWorkspaceMember,
+} from "../services/Api.js";
 import { getToken } from "../Routes/ProtectedRoutes.jsx";
 
 const WorkspaceContext = createContext(null);
@@ -13,7 +18,10 @@ export function WorkspaceProvider({ children }) {
   const token = getToken();
 
   useEffect(() => {
-    if (!token) { setLoading(false); return; }
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     loadWorkspace();
   }, [token]);
 
@@ -21,7 +29,7 @@ export function WorkspaceProvider({ children }) {
     try {
       setLoading(true);
       const res = await fetchMyWorkspace();
-      const data = res.data.data; // { workspace: {...}, role: "admin" }
+      const data = res.data.data; // { role, joinedAt, workspace: { ...members[] } }
 
       setWorkspace(data.workspace);
       setMembers(data.workspace.members ?? []);
@@ -33,9 +41,28 @@ export function WorkspaceProvider({ children }) {
     }
   };
 
+  const inviteMember = async (email, role = "member") => {
+    await inviteWorkspaceMember(email, role);
+    await loadWorkspace(); // re-fetch so members list is in sync
+  };
+
+  const removeMember = async (userId) => {
+    await removeWorkspaceMember(userId);
+    setMembers((prev) => prev.filter((m) => m.user._id !== userId));
+  };
+
   return (
     <WorkspaceContext.Provider
-      value={{ workspace, members, myRole, loading, error, loadWorkspace }}
+      value={{
+        workspace,
+        members,
+        myRole,
+        loading,
+        error,
+        loadWorkspace,
+        inviteMember,
+        removeMember,
+      }}
     >
       {children}
     </WorkspaceContext.Provider>

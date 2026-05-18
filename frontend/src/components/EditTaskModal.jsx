@@ -13,8 +13,7 @@ import {
   Archive,
   ExternalLink,
 } from "lucide-react";
-import { useProjects } from "../context/Projectscontext.jsx";
-import { addMembersToProject } from "../services/Api.js";
+import { useWorkspace } from "../context/Workspacecontext";
 import toast from "react-hot-toast";
 
 // ─── constants ────────────────────────────────────────────────────────────────
@@ -111,7 +110,7 @@ function LinkItem({ link, onRemove }) {
 
 // ─── main component ───────────────────────────────────────────────────────────
 
-export default function EditTaskModal({ task = {}, members = [], onClose, onSave, onDelete, isProjectAdmin = false }) {
+export default function EditTaskModal({ task = {}, onClose, onSave, onDelete, isProjectAdmin = false }) {
 
   // ── state ──────────────────────────────────────────────────────────────────
   const [title, setTitle] = useState(task.title || "");
@@ -128,12 +127,10 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const [showAddMember, setShowAddMember] = useState(false);
-  const [memberInput, setMemberInput] = useState("");
+
 
   const fileRef = useRef(null);
-  const { activeProject, fetchMembers } = useProjects();
-
+const { members } = useWorkspace();
   const assigneeOptions = members
     .map((member) => {
       const user = member?.user ?? member;
@@ -205,19 +202,6 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
     setLinkInput("");
   };
 
-  const handleAddMember = async () => {
-    if (!memberInput.trim()) return;
-    try {
-      await addMembersToProject(activeProject._id, memberInput);
-      await fetchMembers(activeProject._id);
-      setMemberInput("");
-      setShowAddMember(false);
-      toast.success("Member added");
-    } catch (err) {
-      console.error("Failed to add member", err);
-      toast.error("Failed to add member");
-    }
-  };
 
   // ── render ─────────────────────────────────────────────────────────────────
 
@@ -331,24 +315,7 @@ export default function EditTaskModal({ task = {}, members = [], onClose, onSave
           </div>
 
           {/* FIX 3: removed duplicate showAddMember block — render only once */}
-          {showAddMember && (
-            <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.06] flex gap-2">
-              <input
-                value={memberInput}
-                onChange={(e) => setMemberInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
-                placeholder="Enter user email..."
-                className="flex-1 h-9 px-3 rounded-[8px] bg-white/[0.04] border border-white/[0.07]
-                           text-zinc-400 text-[12px] outline-none"
-              />
-              <button
-                onClick={handleAddMember}
-                className="px-3 h-9 rounded-[8px] bg-blue-600 hover:bg-blue-500 text-white text-xs transition-colors"
-              >
-                Add
-              </button>
-            </div>
-          )}
+     
 
           <hr className="border-white/[0.05]" />
 

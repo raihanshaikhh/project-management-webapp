@@ -8,20 +8,24 @@ import {
   getProjectMembers,
   deleteMember,
 } from "../services/Api.js";
+import { useWorkspace } from "./Workspacecontext.jsx";
 
 import { getToken } from "../Routes/ProtectedRoutes.jsx";
 
 const ProjectsContext = createContext(null);
 
 export function ProjectsProvider({ children }) {
+  const { workspace } = useWorkspace(); 
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeProject, setActiveProject] = useState(null);
   const [projectMembers, setProjectMembers] = useState({});
+  
   const token = getToken();
 
   const loadProjects = async () => {
+    if (!workspace?._id) return;
     try {
       setLoading(true);
       const res = await fetchProjects();
@@ -43,7 +47,7 @@ export function ProjectsProvider({ children }) {
     } else {
       setLoading(false);
     }
-  }, [token]);
+  }, [token,workspace?._id]); // re-run when workspace changes, to load projects for new workspace
 
   // ── Members ──────────────────────────────────────────────
 

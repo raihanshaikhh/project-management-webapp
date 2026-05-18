@@ -26,7 +26,10 @@ export default function Login({ form, onChange, onSwitch }) {
         email: form.email,
         password: form.password,
       });
-      localStorage.setItem("token", res.data.token);
+
+      const data = res.data.data; // { user, accessToken, refreshToken }
+      localStorage.setItem("token", data.accessToken);
+      localStorage.setItem("user", JSON.stringify(data.user));
       toast.success("Logged in");
       navigate("/app/dashboard");
     } catch (err) {

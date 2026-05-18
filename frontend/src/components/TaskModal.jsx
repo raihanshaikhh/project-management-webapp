@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { X, Check } from "lucide-react";
 import { fetchTasks, createTask } from "../services/Api";
+import { useWorkspace } from "../context/WorkspaceContext.jsx";
 
 export default function TaskModal({ status, onClose, onSave }) {
+  const { members } = useWorkspace();
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [priority, setPriority] = useState("Medium");

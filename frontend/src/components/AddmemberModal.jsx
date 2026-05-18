@@ -1,23 +1,24 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useProjects } from "../context/Projectscontext.jsx";
+import { useWorkspace } from "../context/WorkspaceContext.jsx"; // ← swapped
 import toast from "react-hot-toast";
 
-export default function AddMemberModal({ projectId, onClose }) {
-  const { addMember, removeMember, projectMembers } = useProjects();
+export default function AddMemberModal({ onClose }) { // ← removed projectId, not needed
+  const { members, inviteMember, removeMember, myRole } = useWorkspace(); // ← swapped
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const members = projectMembers[projectId] || [];
+  // ← removed: const members = projectMembers[projectId] || [];
+  // members comes directly from workspace context now
 
   const handleAdd = async () => {
     if (!email.trim()) return;
     setLoading(true);
     setError("");
     try {
-      await addMember(projectId, email, role);
+      await inviteMember(email, role); // ← swapped, no projectId
       setEmail("");
       toast.success("Member invited");
     } catch (err) {
@@ -31,10 +32,9 @@ export default function AddMemberModal({ projectId, onClose }) {
 
   const handleRemove = async (userId) => {
     try {
-      await removeMember(projectId, userId);
+      await removeMember(userId); // ← swapped, no projectId
       toast.success("Member removed");
     } catch (err) {
-      setError("Failed to remove member");
       toast.error("Failed to remove member");
     }
   };
@@ -58,8 +58,12 @@ export default function AddMemberModal({ projectId, onClose }) {
           {/* Header */}
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-white font-semibold text-base">Team Members</h2>
-              <p className="text-zinc-500 text-xs mt-0.5">Invite people to collaborate</p>
+              <h2 className="text-white font-semibold text-base">
+                Workspace Members
+              </h2>
+              <p className="text-zinc-500 text-xs mt-0.5">
+                Invite people to your workspace
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -71,50 +75,49 @@ export default function AddMemberModal({ projectId, onClose }) {
             </button>
           </div>
 
-          {/* Add member input */}
-          <div className="flex flex-col gap-2 mb-5">
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder="Enter email address..."
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(""); }}
-                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                className="flex-1 bg-zinc-800 border border-zinc-700 focus:border-zinc-500 text-zinc-200 text-sm placeholder-zinc-600 rounded-lg px-3 py-2 outline-none transition-colors"
-              />
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="bg-zinc-800 border border-zinc-700 text-zinc-300 text-sm rounded-lg px-2 py-2 outline-none"
+          {/* Only admins can invite */}
+          {myRole === "admin" && (
+            <div className="flex flex-col gap-2 mb-5">
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="Enter email address..."
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                  className="flex-1 bg-zinc-800 border border-zinc-700 focus:border-zinc-500 text-zinc-200 text-sm placeholder-zinc-600 rounded-lg px-3 py-2 outline-none transition-colors"
+                />
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="bg-zinc-800 border border-zinc-700 text-zinc-300 text-sm rounded-lg px-2 py-2 outline-none"
+                >
+                  <option value="member">Member</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              {error && <p className="text-red-400 text-xs px-1">{error}</p>}
+
+              <button
+                onClick={handleAdd}
+                disabled={loading || !email.trim()}
+                className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
               >
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-              </select>
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Invite Member
+                  </>
+                )}
+              </button>
             </div>
+          )}
 
-            {error && (
-              <p className="text-red-400 text-xs px-1">{error}</p>
-            )}
-
-            <button
-              onClick={handleAdd}
-              disabled={loading || !email.trim()}
-              className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Invite Member
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Divider */}
           <div className="h-px bg-zinc-800 mb-4" />
 
           {/* Members list */}
@@ -133,7 +136,6 @@ export default function AddMemberModal({ projectId, onClose }) {
                     className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-zinc-800/60 transition-colors group"
                   >
                     <div className="flex items-center gap-3">
-                      {/* Avatar */}
                       <div className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-400">
                         {initials}
                       </div>
@@ -146,7 +148,6 @@ export default function AddMemberModal({ projectId, onClose }) {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* Role badge */}
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium
                         ${m.role === "owner"
                           ? "bg-amber-500/15 text-amber-400"
@@ -158,8 +159,8 @@ export default function AddMemberModal({ projectId, onClose }) {
                         {m.role}
                       </span>
 
-                      {/* Remove button — hidden for owner */}
-                      {m.role !== "owner" && (
+                      {/* only admins can remove, and can't remove other admins */}
+                      {myRole === "admin" && m.role !== "admin" && (
                         <button
                           onClick={() => handleRemove(m.user._id)}
                           className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 transition-all p-1 rounded"

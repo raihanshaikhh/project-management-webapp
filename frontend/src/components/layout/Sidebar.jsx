@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { BrandHeader } from '../auth/Authcomponents.jsx';
 import { NavLink } from 'react-router-dom';
 import ProjectsList from '../../pages/ProjectsList.jsx';
+import AddMemberModal from '../AddmemberModal.jsx';
+import { useWorkspace } from '../../context/Workspacecontext';
 
 const NAV_ITEMS = [
   {
@@ -9,8 +11,8 @@ const NAV_ITEMS = [
     path: '/app/dashboard',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
       </svg>
     ),
   },
@@ -20,7 +22,7 @@ const NAV_ITEMS = [
     badge: 5,
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
       </svg>
     ),
   },
@@ -30,7 +32,7 @@ const NAV_ITEMS = [
     badge: 3,
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" />
       </svg>
     ),
   },
@@ -39,8 +41,8 @@ const NAV_ITEMS = [
     path: '/app/calendar',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
       </svg>
     ),
   },
@@ -52,8 +54,8 @@ const BOTTOM_ITEMS = [
     path: '/app/settings',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
       </svg>
     ),
   },
@@ -62,29 +64,30 @@ const BOTTOM_ITEMS = [
     path: '/app/invite',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
       </svg>
     ),
   },
 ];
 
 const navClass = (compact) => ({ isActive }) =>
-  `flex items-center ${compact ? "justify-center" : "gap-3"} px-3 py-2 rounded-lg text-sm transition-all ${
-    isActive
-      ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-      : 'text-slate-400 hover:bg-blue-950 hover:text-zinc-100'
+  `flex items-center ${compact ? "justify-center" : "gap-3"} px-3 py-2 rounded-lg text-sm transition-all ${isActive
+    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+    : 'text-slate-400 hover:bg-blue-950 hover:text-zinc-100'
   }`;
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
-  
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const { workspace, myRole } = useWorkspace();
+  const user = JSON.parse(localStorage.getItem("user"));
+
 
   return (
     <div
-      className={`bg-[#0F1115] min-h-screen flex flex-col transition-all duration-500 text-slate-400 ${
-        isOpen ? 'w-64' : 'w-[60px]'
-      }`}
+      className={`bg-[#0F1115] min-h-screen flex flex-col transition-all duration-500 text-slate-400 ${isOpen ? 'w-64' : 'w-[60px]'
+        }`}
     >
       {/* Toggle — always visible */}
       <div className="flex items-center justify-start p-3">
@@ -95,11 +98,11 @@ export default function Sidebar() {
         >
           {isOpen ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/>
+              <line x1="6" y1="6" x2="18" y2="18" /><line x1="6" y1="18" x2="18" y2="6" />
             </svg>
           ) : (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           )}
         </button>
@@ -147,23 +150,28 @@ export default function Sidebar() {
 
       {/* Bottom nav */}
       <div className="px-2 flex flex-col gap-0.5">
-        {BOTTOM_ITEMS.map(({ label, icon, path }) => (
-          <NavLink key={label} to={path} className={navClass(!isOpen)} title={!isOpen ? label : undefined}>
-            <span className="shrink-0">{icon}</span>
-            {isOpen && <span>{label}</span>}
-          </NavLink>
-        ))}
+        <button
+          onClick={() => setShowInviteModal(true)}
+          className={`flex items-center ${!isOpen ? "justify-center" : "gap-3"} px-3 py-2 rounded-lg text-sm transition-all text-slate-400 hover:bg-blue-950 hover:text-zinc-100 w-full`}
+        >
+          <span className="shrink-0">{/* existing invite icon svg */}</span>
+          {isOpen && <span>Invite Teammates</span>}
+        </button>
+
+        {showInviteModal && (
+          <AddMemberModal onClose={() => setShowInviteModal(false)} />
+        )}
       </div>
 
       {/* User row */}
       <div className={`mx-2 mt-2 mb-3 p-2 rounded-md flex items-center ${isOpen ? "gap-3" : "justify-center"} hover:bg-blue-950 cursor-pointer transition-colors`}>
         <div className="w-7 h-7 rounded-full bg-blue-600/25 flex items-center justify-center text-blue-400 text-xs font-medium shrink-0">
-          RH
+           {user?.username?.[0]?.toUpperCase() ?? "?"}
         </div>
         {isOpen && (
           <div className="overflow-hidden">
-            <p className="text-white text-sm font-medium truncate">Raihan</p>
-            <p className="text-zinc-500 text-xs truncate">Developer</p>
+            <p className="text-white text-sm font-medium truncate">{user?.username ?? "User"}</p>
+            <p className="text-zinc-500 text-xs truncate">{myRole ?? "member"}</p>
           </div>
         )}
       </div>

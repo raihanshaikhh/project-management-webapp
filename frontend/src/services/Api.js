@@ -16,6 +16,8 @@ API.interceptors.request.use((req) => {
   return req
 })
 // ── Workspace API calls ────────────────────────────────
+export const createWorkspace = (name, description = "") =>
+  API.post("/workspace", { name, description });
 export const fetchMyWorkspace = () => API.get("/workspace");
 export const fetchWorkspaceMembers = () => API.get("/workspace/members");
 export const inviteWorkspaceMember = (email, role = "member") =>

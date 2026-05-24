@@ -4,8 +4,11 @@ import {
   fetchWorkspaceMembers,
   inviteWorkspaceMember,
   removeWorkspaceMember,
+  deleteWorkspaceApi,
+  leaveWorkspaceApi,
 } from "../services/Api.js";
 import { getToken } from "../Routes/ProtectedRoutes.jsx";
+import  socket  from "../services/socket.js";
 
 const WorkspaceContext = createContext(null);
 
@@ -15,8 +18,35 @@ export function WorkspaceProvider({ children }) {
   const [myRole, setMyRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
   const token = getToken();
+  const leaveWorkspace = async () => {
+  await leaveWorkspaceApi();
+  setWorkspace(null);
+  setMembers([]);
+  setMyRole(null);
+};
+const deleteWorkspace = async () => {
+  await deleteWorkspaceApi();
+  setWorkspace(null);
+  setMembers([]);
+  setMyRole(null);
+};
+  
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user?._id) return;
 
+    socket.emit("joinUserRoom", user._id);
+
+    socket.on("workspaceInvite", () => {
+      loadWorkspace();
+    });
+
+    return () => {
+      socket.off("workspaceInvite");
+    };
+  }, []); // runs once on mount
   useEffect(() => {
     if (!token) {
       setLoading(false);
@@ -25,21 +55,27 @@ export function WorkspaceProvider({ children }) {
     loadWorkspace();
   }, [token]);
 
-  const loadWorkspace = async () => {
-    try {
-      setLoading(true);
-      const res = await fetchMyWorkspace();
-      const data = res.data.data; // { role, joinedAt, workspace: { ...members[] } }
-
-      setWorkspace(data.workspace);
-      setMembers(data.workspace.members ?? []);
-      setMyRole(data.role);
-    } catch (err) {
+const loadWorkspace = async () => {
+  try {
+    setLoading(true);
+    const res = await fetchMyWorkspace();
+    const data = res.data.data;
+    setWorkspace(data.workspace);
+    setMembers(data.workspace.members ?? []);
+    setMyRole(data.role);
+  } catch (err) {
+    if (err.response?.status === 404) {
+      // no workspace yet — not an error
+      setWorkspace(null);
+      setMembers([]);
+      setMyRole(null);
+    } else {
       setError(err.response?.data?.message || "Failed to load workspace");
-    } finally {
-      setLoading(false);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const inviteMember = async (email, role = "member") => {
     await inviteWorkspaceMember(email, role);
@@ -62,6 +98,8 @@ export function WorkspaceProvider({ children }) {
         loadWorkspace,
         inviteMember,
         removeMember,
+        leaveWorkspace,
+        deleteWorkspace,
       }}
     >
       {children}

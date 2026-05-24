@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useWorkspace } from "../context/WorkspaceContext.jsx"; // ← swapped
+import { useWorkspace } from "../context/Workspacecontext.jsx"; // ← swapped
 import toast from "react-hot-toast";
 
 export default function AddMemberModal({ onClose }) { // ← removed projectId, not needed
-  const { members, inviteMember, removeMember, myRole } = useWorkspace(); // ← swapped
+  const { members, inviteMember, removeMember, myRole, leaveWorkspace, deleteWorkspace } = useWorkspace(); // ← swapped
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // ← removed: const members = projectMembers[projectId] || [];
   // members comes directly from workspace context now
@@ -29,7 +30,25 @@ export default function AddMemberModal({ onClose }) { // ← removed projectId, 
       setLoading(false);
     }
   };
-
+  // add handlers
+  const handleLeave = async () => {
+    try {
+      await leaveWorkspace();
+      toast.success("Left workspace");
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to leave workspace");
+    }
+  };
+  const handleDelete = async () => {
+    try {
+      await deleteWorkspace();
+      toast.success("Workspace deleted");
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete workspace");
+    }
+  };
   const handleRemove = async (userId) => {
     try {
       await removeMember(userId); // ← swapped, no projectId
@@ -152,8 +171,8 @@ export default function AddMemberModal({ onClose }) { // ← removed projectId, 
                         ${m.role === "owner"
                           ? "bg-amber-500/15 text-amber-400"
                           : m.role === "admin"
-                          ? "bg-purple-500/15 text-purple-400"
-                          : "bg-zinc-700/60 text-zinc-400"
+                            ? "bg-purple-500/15 text-purple-400"
+                            : "bg-zinc-700/60 text-zinc-400"
                         }`}
                       >
                         {m.role}
@@ -176,7 +195,53 @@ export default function AddMemberModal({ onClose }) { // ← removed projectId, 
               })
             )}
           </div>
+          {/* Footer actions */}
+          <div className="mt-4 pt-4 border-t border-zinc-800">
+            {myRole === "admin" ? (
+              // admin sees delete workspace
+              confirmDelete ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-zinc-500 text-xs">Delete entire workspace?</span>
+                  <button
+                    onClick={handleDelete}
+                    className="px-3 py-1.5 bg-red-500/15 border border-red-500/30 text-red-400 text-xs rounded-lg hover:bg-red-500/25 transition-colors"
+                  >
+                    Yes, delete
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="px-3 py-1.5 text-zinc-500 text-xs rounded-lg hover:bg-zinc-800 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-2 text-red-400 text-xs hover:text-red-300 transition-colors"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
+                  </svg>
+                  Delete Workspace
+                </button>
+              )
+            ) : (
+              // member sees leave workspace
+              <button
+                onClick={handleLeave}
+                className="flex items-center gap-2 text-zinc-500 text-xs hover:text-red-400 transition-colors"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Leave Workspace
+              </button>
+            )}
+          </div>
+
         </motion.div>
+
       </motion.div>
     </AnimatePresence>
   );

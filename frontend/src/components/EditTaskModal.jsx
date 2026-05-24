@@ -13,7 +13,7 @@ import {
   Archive,
   ExternalLink,
 } from "lucide-react";
-import { useWorkspace } from "../context/Workspacecontext";
+import { useWorkspace } from "../context/Workspacecontext.jsx";
 import toast from "react-hot-toast";
 
 // ─── constants ────────────────────────────────────────────────────────────────

@@ -6,6 +6,8 @@ import { Workspace } from "../models/workspace.model.js";
 import { WorkspaceMember } from "../models/workspace.member.model.js";
 import mongoose from "mongoose";
 import { UserRolesEnum } from "../utils/costants.js";
+import { inviteTestEmail } from "../utils/mail.js";
+import {io} from "../index.js"
 
 
 // ── GET /api/v1/workspace ─────────────────────────────────────────────────────
@@ -150,7 +152,22 @@ const inviteMember = asyncHandler(async (req, res) => {
     user: invitee._id,
     role,
   });
-
+  const io = req.app.get("io"); // ← get io from app (already set via app.set("io", io))
+io.to(`user:${invitee._id.toString()}`).emit("workspaceInvite", {
+  workspaceId: myMembership.workspace,
+});
+   // fetch workspace name for the email
+const workspace = await Workspace.findById(myMembership.workspace);
+console.log("Sending invite email to:", invitee.email, "workspace:", workspace.name);
+// send invite email — non-blocking, don't fail the request if email fails
+inviteTestEmail({
+    toEmail: invitee.email,
+    toName: invitee.username,
+    inviterName: req.user.username,
+    projectName: workspace.name,
+  }).catch((err) => {
+    console.error("Invite email failed:", err.message);
+  });
   // 5. return populated member so frontend can append directly
   const populated = await WorkspaceMember.findById(newMember._id).populate(
     "user",
@@ -190,7 +207,49 @@ const removeMember = asyncHandler(async (req, res) => {
     new ApiResponse(200, null, "Member removed successfully")
   );
 });
+// ── DELETE /api/v1/workspace/leave ───────────────────────────────────────────
+const leaveWorkspace = asyncHandler(async (req, res) => {
+  const membership = await WorkspaceMember.findOne({
+    user: req.user._id,
+  });
 
+  if (!membership) {
+    throw new ApiError(404, "You are not in any workspace");
+  }
+
+  // admin can't leave — they must delete the workspace
+  if (membership.role === UserRolesEnum.ADMIN) {
+    throw new ApiError(400, "Admins cannot leave. Delete the workspace instead.");
+  }
+
+  await WorkspaceMember.findByIdAndDelete(membership._id);
+
+  return res.status(200).json(
+    new ApiResponse(200, null, "Left workspace successfully")
+  );
+});
+
+// ── DELETE /api/v1/workspace ──────────────────────────────────────────────────
+const deleteWorkspace = asyncHandler(async (req, res) => {
+  const membership = await WorkspaceMember.findOne({
+    user: req.user._id,
+    role: UserRolesEnum.ADMIN,
+  });
+
+  if (!membership) {
+    throw new ApiError(403, "Only admins can delete the workspace");
+  }
+
+  // delete all members
+  await WorkspaceMember.deleteMany({ workspace: membership.workspace });
+
+  // delete the workspace itself
+  await Workspace.findByIdAndDelete(membership.workspace);
+
+  return res.status(200).json(
+    new ApiResponse(200, null, "Workspace deleted successfully")
+  );
+});
 // ── GET /api/v1/workspace/members ─────────────────────────────────────────────
 const getWorkspaceMembers = asyncHandler(async (req, res) => {
   const myMembership = await WorkspaceMember.findOne({
@@ -211,6 +270,8 @@ const getWorkspaceMembers = asyncHandler(async (req, res) => {
 
 export {
   createWorkSpace,
+  deleteWorkspace,
+  leaveWorkspace,
   getWorkspaceUser,
   inviteMember,
   removeMember,

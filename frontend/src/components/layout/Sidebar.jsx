@@ -3,7 +3,7 @@ import { BrandHeader } from '../auth/Authcomponents.jsx';
 import { NavLink } from 'react-router-dom';
 import ProjectsList from '../../pages/ProjectsList.jsx';
 import AddMemberModal from '../AddmemberModal.jsx';
-import { useWorkspace } from '../../context/Workspacecontext';
+import { useWorkspace } from '../../context/Workspacecontext.jsx';
 
 const NAV_ITEMS = [
   {

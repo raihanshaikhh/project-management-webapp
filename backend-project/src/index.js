@@ -10,7 +10,7 @@ dotenv.config({
 
 const server = http.createServer(app);
 
-const io = new Server(server, {
+export const io = new Server(server, {
     cors: {
         origin: "*"
     }
@@ -35,7 +35,17 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         console.log("User disconnected:", socket.id);
     });
+    socket.on("joinUserRoom", (userId) => {
+    if (!userId) return;
+    socket.join(`user:${String(userId)}`);
+    console.log(`User ${userId} joined personal room`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
 });
+
 
 // connect to database
 connectDB()

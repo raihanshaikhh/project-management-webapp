@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Check } from "lucide-react";
 import { fetchTasks, createTask } from "../services/Api";
-import { useWorkspace } from "../context/WorkspaceContext.jsx";
+import { useWorkspace } from "../context/Workspacecontext.jsx";
 
 export default function TaskModal({ status, onClose, onSave }) {
   const { members } = useWorkspace();

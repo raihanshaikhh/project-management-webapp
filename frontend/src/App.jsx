@@ -8,7 +8,7 @@ import Calendar from "./pages/Calendar.jsx";
 import Settings from "./pages/setting/Setting.jsx";
 import ProtectedRoute from "./Routes/ProtectedRoutes.jsx";
 import AppProviders from "./AppProvider.jsx";
-import socket from "./services/Socket.js";
+import socket from "./services/socket.js";
 import { useEffect } from "react";
 
 

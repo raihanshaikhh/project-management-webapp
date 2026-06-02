@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import { useProjects } from '../context/Projectscontext';
 import toast from "react-hot-toast";
 
-const COLOR_OPTIONS = [
-  '#378ADD', '#1D9E75', '#D85A30', '#D4537E',
-  '#BA7517', '#7C3AED', '#0EA5E9', '#10B981',
-];
+
 export default function ProjectsList({ compact = false }) {
   const { projects, addProject, removeProject, activeProject, setActiveProject } = useProjects();
   const [showForm, setShowForm] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newColor, setNewColor] = useState(COLOR_OPTIONS[0]);
   const [newDescription, setNewDescription] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
 
@@ -48,12 +44,13 @@ export default function ProjectsList({ compact = false }) {
     if (!trimmed) return;
     addProject(trimmed, newDescription)
       .then(() => {
+        console.log("Project added");
         toast.success("Project created");
         setNewName('');
-        setNewColor(COLOR_OPTIONS[0]);
+        
         setShowForm(false);
       })
-      .catch(() => toast.error("Failed to create project"));
+      .catch((err) =>{   console.log("Create Project Error:", err.response?.data) ;  toast.error("Failed to create project")})
   };
 
   const handleKeyDown = (e) => {
@@ -102,18 +99,6 @@ export default function ProjectsList({ compact = false }) {
             onKeyDown={handleKeyDown}
             className="w-full bg-transparent text-sm text-white placeholder-zinc-600 outline-none border-b border-zinc-700 pb-1 resize-none"
           />
-          {/* Color picker */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {COLOR_OPTIONS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setNewColor(c)}
-                className={`w-4 h-4 rounded-full transition-transform ${newColor === c ? 'scale-125 ring-2 ring-white/30' : ''}`}
-                style={{ background: c }}
-                title={c}
-              />
-            ))}
-          </div>
 
           <div className="flex gap-2 justify-end">
             <button

@@ -1,39 +1,40 @@
 import { Task } from "../models/task.model.js";
 import { Project } from "../models/project.model.js";
+import { WorkspaceMember } from "../models/workspace.member.model.js";
 
 export const getDashboard = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Projects
-    const projects = await Project.find({
-      members: userId,
-    });
+    // get user's workspace
+    const membership = await WorkspaceMember.findOne({ user: userId });
+
+    // fetch all projects in the workspace
+    const projects = membership
+      ? await Project.find({ workspace: membership.workspace })
+      : [];
 
     const projectCount = projects.length;
 
-    // Tasks
-    const tasks = await Task.find({
-      assignedTo: userId,
-    }).populate("project", "name");
+    // tasks assigned to this user
+    const tasks = await Task.find({ assignedTo: userId })
+      .populate("project", "name color");
 
-    const openTasks = tasks.filter(t => t.status !== "done").length;
+    const openTasks = tasks.filter((t) => t.status !== "done").length;
 
     const taskCounts = {
-      todo: tasks.filter(t => t.status === "todo").length,
-      in_progress: tasks.filter(t => t.status === "in_progress").length,
-      done: tasks.filter(t => t.status === "done").length,
+      todo: tasks.filter((t) => t.status === "todo").length,
+      in_progress: tasks.filter((t) => t.status === "in_progress").length,
+      done: tasks.filter((t) => t.status === "done").length,
     };
 
-    // Recent tasks (limit 12)
     const myTasks = tasks.slice(0, 12);
 
-    // Project stats
+    // project health stats
     const projectStats = await Promise.all(
       projects.map(async (proj) => {
         const projTasks = await Task.find({ project: proj._id });
-
-        const done = projTasks.filter(t => t.status === "Done").length;
+        const done = projTasks.filter((t) => t.status === "done").length; // ← lowercase
 
         return {
           _id: proj._id,

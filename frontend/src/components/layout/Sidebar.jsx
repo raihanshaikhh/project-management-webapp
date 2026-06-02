@@ -4,6 +4,7 @@ import { NavLink } from 'react-router-dom';
 import ProjectsList from '../../pages/ProjectsList.jsx';
 import AddMemberModal from '../AddmemberModal.jsx';
 import { useWorkspace } from '../../context/Workspacecontext.jsx';
+import { useNavigate } from "react-router-dom";
 
 const NAV_ITEMS = [
   {
@@ -82,6 +83,13 @@ export default function Sidebar() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const { workspace, myRole } = useWorkspace();
   const user = JSON.parse(localStorage.getItem("user"));
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/sign-in");
+  };
 
 
   return (
@@ -163,16 +171,30 @@ export default function Sidebar() {
         )}
       </div>
 
+
       {/* User row */}
-      <div className={`mx-2 mt-2 mb-3 p-2 rounded-md flex items-center ${isOpen ? "gap-3" : "justify-center"} hover:bg-blue-950 cursor-pointer transition-colors`}>
+      <div className={`mx-2 mt-2 mb-3 p-2 rounded-md flex items-center ${isOpen ? "gap-3" : "justify-center"} transition-colors group`}>
         <div className="w-7 h-7 rounded-full bg-blue-600/25 flex items-center justify-center text-blue-400 text-xs font-medium shrink-0">
-           {user?.username?.[0]?.toUpperCase() ?? "?"}
+          {user?.username?.[0]?.toUpperCase() ?? "?"}
         </div>
         {isOpen && (
-          <div className="overflow-hidden">
-            <p className="text-white text-sm font-medium truncate">{user?.username ?? "User"}</p>
-            <p className="text-zinc-500 text-xs truncate">{myRole ?? "member"}</p>
-          </div>
+          <>
+            <div className="overflow-hidden flex-1">
+              <p className="text-white text-sm font-medium truncate">{user?.username ?? "User"}</p>
+              <p className="text-zinc-500 text-xs truncate capitalize">{myRole ?? "member"}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              title="Logout"
+              className=" group-hover:opacity-100 text-zinc-600 hover:text-red-400 transition-all p-1 rounded"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </>
         )}
       </div>
     </div>

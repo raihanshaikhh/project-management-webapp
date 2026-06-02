@@ -19,11 +19,10 @@ const router = Router()
 
 router.use(verifyJWT)
 
+// correct — chained on one definition
 router.route("/workspace/:workspaceId")
-.get(getProject)
-
-router.route("/workspace/:workspaceId")
-.post(createProjectValidator(), validate, createProject)
+  .get(getProject)
+  .post(createProjectValidator(), validate, createProject);
 
 router
   .route("/:projectId")

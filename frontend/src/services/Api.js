@@ -29,16 +29,22 @@ export const inviteWorkspaceMember = (email, role = "member") =>
   API.post("/workspace/invite", { email, role });
 export const removeWorkspaceMember = (userId) =>
   API.delete(`/workspace/members/${userId}`);
+
+
 // ── Project API calls ──────────────────────────────────
-export const fetchProjects = () => API.get("/projects")
+export const fetchProjects = (workspaceId) =>   API.get(`/projects/workspace/${workspaceId}`);
+
 export const fetchProjectById = (projectId) => API.get(`/projects/${projectId}`)
-export const createProject = (name, description) => API.post("/projects", { name, description })
-export const updateProject = (projectId, name, description) => API.patch(`/projects/${projectId}`, { name, description })
+
+export const createProject = (workspaceId, name, description) => API.post(`/projects/workspace/${workspaceId}`, { name, description })
+
+export const updateProject = (projectId, name, description) => API.put(`/projects/${projectId}`, { name, description })
+
 export const deleteProject = (projectId) => API.delete(`/projects/${projectId}`)
 
 // ── Task API calls ─────────────────────────────────────
-export const fetchTasks = (projectId) => API.get(`/projects/${projectId}/tasks`)
-export const createTask = (projectId, data) => API.post(`/projects/${projectId}/tasks`, data)
+export const fetchTasks = (projectId) => API.get(`/tasks/project/${projectId}`);
+export const createTask = (projectId, data) => API.post(`/tasks/project/${projectId}`, data);
 export const fetchTaskById = (taskId) => API.get(`/tasks/${taskId}`)
 export const updateTask = (taskId, data) => API.patch(`/tasks/${taskId}`, data)
 export const deleteTask = (taskId) => API.delete(`/tasks/${taskId}`)

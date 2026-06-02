@@ -4,9 +4,6 @@ import {
   createProject as apiCreateProject,
   updateProject as apiUpdateProject,
   deleteProject as apiDeleteProject,
-  addMembersToProject,
-  getProjectMembers,
-  deleteMember,
 } from "../services/Api.js";
 import { useWorkspace } from "./Workspacecontext.jsx";
 
@@ -15,20 +12,20 @@ import { getToken } from "../Routes/ProtectedRoutes.jsx";
 const ProjectsContext = createContext(null);
 
 export function ProjectsProvider({ children }) {
-  const { workspace } = useWorkspace(); 
+  const { workspace } = useWorkspace();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeProject, setActiveProject] = useState(null);
-  const [projectMembers, setProjectMembers] = useState({});
-  
+
+
   const token = getToken();
 
   const loadProjects = async () => {
     if (!workspace?._id) return;
     try {
       setLoading(true);
-      const res = await fetchProjects();
+      const res = await fetchProjects(workspace._id);
       const list = res.data.data.map((entry) => entry.project);
       setProjects(list);
       setActiveProject(list[0] || null);
@@ -47,30 +44,17 @@ export function ProjectsProvider({ children }) {
     } else {
       setLoading(false);
     }
-  }, [token,workspace?._id]); // re-run when workspace changes, to load projects for new workspace
+  }, [token, workspace?._id]); // re-run when workspace changes, to load projects for new workspace
 
   // ── Members ──────────────────────────────────────────────
 
-  const fetchMembers = async (projectId) => {
-    try {
-      const { data } = await getProjectMembers(projectId);
-      setProjectMembers((prev) => ({ ...prev, [projectId]: data.data }));
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch members");
-    }
-  };
 
-  // FIX 1: useEffect now calls fetchMembers so members are stored as
-  // { [projectId]: [...] } — previously called setProjectMembers(res.data.data)
-  // which stored a plain array, making projectMembers[projectId] undefined everywhere
-  useEffect(() => {
-    if (!activeProject) return;
-    fetchMembers(activeProject._id);
-  }, [activeProject?._id]); // dep on _id only — avoids re-running on object reference changes
+
+
 
   const addProject = async (name, description = "") => {
     try {
-      const res = await apiCreateProject(name, description);
+      const res = await apiCreateProject(workspace._id, name, description); // ← passes workspaceId
       const newProject = res.data.data;
       setProjects((prev) => [...prev, newProject]);
       if (!activeProject) setActiveProject(newProject);
@@ -117,32 +101,6 @@ export function ProjectsProvider({ children }) {
     }
   };
 
-  const addMember = async (projectId, email, role = "member") => {
-    try {
-      await addMembersToProject(projectId, email, role);
-      // FIX 2: instead of trying to append data.data (whose shape is unpredictable),
-      // re-fetch the full members list so the UI is always in sync with the server
-      await fetchMembers(projectId);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to add member");
-      throw err;
-    }
-  };
-
-  const removeMember = async (projectId, userId) => {
-    try {
-      await deleteMember(projectId, userId);
-      setProjectMembers((prev) => ({
-        ...prev,
-        [projectId]: (prev[projectId] || []).filter(
-          (m) => m.user._id !== userId
-        ),
-      }));
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to remove member");
-      throw err;
-    }
-  };
 
   return (
     <ProjectsContext.Provider
@@ -156,10 +114,7 @@ export function ProjectsProvider({ children }) {
         addProject,
         removeProject,
         updateProject,
-        projectMembers,
-        fetchMembers,
-        addMember,
-        removeMember,
+
       }}
     >
       {children}

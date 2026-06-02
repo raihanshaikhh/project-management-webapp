@@ -8,72 +8,42 @@ import asyncHandler from "../utils/asyn-handler.js"
 import mongoose from "mongoose"
 import { AvailableUserRole, UserRolesEnum } from "../utils/costants.js"
 import { inviteTestEmail } from "../utils/mail.js"
+import { WorkspaceMember } from "../models/workspace.member.model.js"
+
+
+
 const getProject = asyncHandler(async (req, res) => {
-    const { workspaceId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
-   throw new ApiError(400, "Invalid workspace id");
-}
-    const project = await ProjectMember.aggregate([
-        {
-            $match: {
-                user: new mongoose.Types.ObjectId(req.user._id)
-            }
-        },
-        {
-            $lookup: {
-                from: "projects",
-                localField: "project",   // ✅ singular
-                foreignField: "_id",
-                as: "project",
-                pipeline: [
-                    {
-                        $match:{
-                            workspace: new mongoose.Types.ObjectId(workspaceId)
-                        }
-                    },
-                    {
-                    $lookup: {
-                            from: "projectmembers",
-                            localField: "_id",
-                            foreignField: "project", // ✅ singular
-                            as: "projectmembers"
-                        },
-                        
-                       
-                    },
-                    
-                    {
-                        $addFields: {
-                            members: { $size: "$projectmembers" }
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            $unwind: "$project"
-        },
-        {
-            $project: {
-                project: {
-                    _id: "$project._id",
-                    name: "$project.name",
-                    description: "$project.description",
-                    members: "$project.members",
-                    createdAt: "$project.createdAt",
-                    createdBy: "$project.createdBy"
-                },
-                role: 1,
-                _id: 0
-            }
-        }
-    ])
+  const { workspaceId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
+    throw new ApiError(400, "Invalid workspace id");
+  }
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, project, "project fetched successfully"))
-})
+  // verify user is a workspace member
+  const isMember = await WorkspaceMember.findOne({
+    workspace: workspaceId,
+    user: req.user._id,
+  });
+
+  if (!isMember) {
+    throw new ApiError(403, "You are not a member of this workspace");
+  }
+
+  // fetch ALL projects in workspace — not just ones user is a ProjectMember of
+  const projects = await Project.find({ workspace: workspaceId })
+    .select("_id name description createdBy createdAt color")
+    .lean();
+
+  // keep { project, role } shape so frontend mapping stays intact
+  const list = projects.map((p) => ({
+    project: p,
+    role: isMember.role,
+  }));
+
+  return res.status(200).json(
+    new ApiResponse(200, list, "Projects fetched successfully")
+  );
+});
 
 const getProjectById = asyncHandler(async (req, res) => {
     const { projectId } = req.params

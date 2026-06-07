@@ -1,6 +1,9 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import passport from './utils/passport.js'
+import  session  from 'express-session'
+import { User } from './models/user.models.js'
 
 const app = express()
 
@@ -19,6 +22,23 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'PATCH' ,'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }))
+///google auth
+app.use(session({
+  secret: process.env.ACCESS_TOKEN_SECRET,
+  resave: false,
+  saveUninitialized: false,
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => done(null, user._id));
+passport.deserializeUser(async (id, done) => {
+  const user = await User.findById(id);
+  done(null, user);
+});
+
+
 //importing routes
 import  healthCheckRouter  from './routes/healthcheck.route.js'
 import authRouter from "./routes/authUser.route.js"

@@ -124,6 +124,31 @@ const inviteTestEmail = async ({ toEmail, toName, inviterName, projectName }) =>
   console.log("Invite email sent:", info.messageId);
   return info;
 };
+const welcomeEmailTemplate = (username) => {
+  return {
+    body: {
+      name: username,
+      intro: "Welcome to Flow! We're thrilled to have you on board.",
+      action: {
+        instructions: "Get started by creating your workspace and inviting your team:",
+        button: {
+          color: "#22BC66",
+          text: "Go to Flow",
+          link: process.env.CLIENT_URL,
+        },
+      },
+      outro: "Need help? Just reply to this email — we'd love to assist.",
+    },
+  };
+};
+
+export { 
+  emailVerificationTemplate, 
+  passwordResetTemplate, 
+  emailSend, 
+  inviteTestEmail,
+  welcomeEmailTemplate, // ← add this
+};
 export{
     emailVerificationTemplate,
     passwordResetTemplate,

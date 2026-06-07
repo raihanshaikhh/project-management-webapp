@@ -1,6 +1,7 @@
+import dotenv from 'dotenv';
 import http from 'http';
 import { Server } from 'socket.io';
-import dotenv from 'dotenv';
+
 import app from './app.js';
 import connectDB from './db/mongodb-connection.js';
 

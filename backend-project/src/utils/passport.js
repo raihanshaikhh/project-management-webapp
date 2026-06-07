@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { User } from "../models/user.models.js";
 import crypto from "crypto"
+import { emailSend, welcomeEmailTemplate } from "./mail.js";
 
 passport.use(
     new GoogleStrategy(
@@ -31,7 +32,13 @@ passport.use(
                     isEmailVerified: true,
                     password: crypto.randomBytes(16).toString("hex"), // random unhashed — pre-save hook will hash it
                 });
-
+                emailSend({
+                    email: user.email,
+                    subject: "Welcome to Flow 🎉",
+                    mailgenContent: welcomeEmailTemplate(user.username),
+                }).catch((err) => {
+                    console.error("Welcome email failed:", err.message);
+                });
                 return done(null, user);
             } catch (err) {
                 return done(err, null);
@@ -41,11 +48,11 @@ passport.use(
 );
 passport.serializeUser((user, done) => done(null, user._id));
 passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err, null);
-  }
+    try {
+        const user = await User.findById(id);
+        done(null, user);
+    } catch (err) {
+        done(err, null);
+    }
 });
 export default passport;

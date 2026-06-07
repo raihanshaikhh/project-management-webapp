@@ -10,7 +10,7 @@ import ProtectedRoute from "./Routes/ProtectedRoutes.jsx";
 import AppProviders from "./AppProvider.jsx";
 import socket from "./services/socket.js";
 import { useEffect } from "react";
-
+import GoogleSuccess from "./pages/GoogleSuccess.jsx";
 
   
 
@@ -33,7 +33,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Auth />} />
       <Route path="/sign-in" element={<Auth />} />
-
+      <Route path="auth/google/success" element={<GoogleSuccess />} />
       <Route element={<ProtectedRoute />}>
       <Route element={<AppProviders />}>
         <Route path="/app" element={<DashboardLayout />}>

@@ -163,13 +163,18 @@ export function SubmitButton({ onClick, children }) {
 /* ────────────────────────────── Social row ── */
 function SocialBtn({ children }) {
   return (
-    <button className="font-outfit flex-1 py-2.5 rounded-lg text-slate-400 text-[12.5px] flex items-center justify-center gap-1.5 cursor-pointer transition-all duration-200 border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/[0.14]">
+    <button
+    onClick={onClick}
+    className="font-outfit flex-1 py-2.5 rounded-lg text-slate-400 text-[12.5px] flex items-center justify-center gap-1.5 cursor-pointer transition-all duration-200 border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.07] hover:border-white/[0.14]">
       {children}
     </button>
   );
 }
 
 export function SocialRow() {
+  const handleGoogleLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL?.replace("/api/v1", "")}/api/v1/auth/google`;
+  };
   return (
     <>
       <div className="flex items-center gap-2.5 my-4">

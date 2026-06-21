@@ -38,7 +38,7 @@ const handleSubmit = async () => {
       style={{ backgroundColor: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
     >
       <div className="relative w-full max-w-110 mx-4 max-h-[85vh] overflow-y-auto rounded-2xl border border-zinc-800 shadow-2xl custom-scrollbar"
-        style={{ backgroundColor: "#0B1120" }}
+        style={{ backgroundColor: "#111112" }}
       >
         <div className="p-6">
           {/* Close */}

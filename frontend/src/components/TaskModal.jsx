@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, Check } from "lucide-react";
 import { fetchTasks, createTask } from "../services/Api";
 import { useWorkspace } from "../context/Workspacecontext.jsx";
+import { motion } from "motion/react";
 
 export default function TaskModal({ status, onClose, onSave }) {
   const { members } = useWorkspace();
@@ -37,9 +38,9 @@ const handleSubmit = async () => {
       className="fixed top-0 left-0 w-screen h-screen z-999 flex items-center justify-center "
       style={{ backgroundColor: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
     >
-      <div className="relative w-full max-w-110 mx-4 max-h-[85vh] overflow-y-auto rounded-2xl border border-zinc-800 shadow-2xl custom-scrollbar"
+      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative w-full max-w-110 mx-4 max-h-[85vh] overflow-y-auto rounded-2xl border border-zinc-800 shadow-2xl custom-scrollbar"
         style={{ backgroundColor: "#111112" }}
-      >
+      />
         <div className="p-6">
           {/* Close */}
           <button
@@ -129,6 +130,5 @@ const handleSubmit = async () => {
           </div>
         </div>
       </div>
-    </div>
   );
 }

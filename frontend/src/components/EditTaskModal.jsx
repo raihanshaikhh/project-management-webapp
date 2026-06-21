@@ -56,9 +56,7 @@ function AttachmentItem({ file, onRemove }) {
   const { icon: Icon, bg, text } = getFileIcon(file.name);
   return (
     <motion.div
-      initial={{ opacity: 0, y: -6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -10 }}
+    initial={{ scale: 0 }} animate={{ scale: 1 }}
       className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] group"
     >
       <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${bg}`}>

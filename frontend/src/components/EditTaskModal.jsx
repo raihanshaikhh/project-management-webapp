@@ -229,7 +229,7 @@ const { members } = useWorkspace();
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 flex flex-col gap-5 max-h-[480px] overflow-y-auto edit-task-modal-body">
+        <div className="px-6 py-5 flex flex-col gap-5 max-h-[480px] overflow-y-auto custom-scrollbar">
 
           {/* Title */}
           <input

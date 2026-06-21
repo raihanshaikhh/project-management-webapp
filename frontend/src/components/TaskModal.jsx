@@ -34,10 +34,10 @@ const handleSubmit = async () => {
 
   return (
     <div
-      className="fixed top-0 left-0 w-screen h-screen z-999 flex items-center justify-center edit-task-modal-body"
+      className="fixed top-0 left-0 w-screen h-screen z-999 flex items-center justify-center "
       style={{ backgroundColor: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
     >
-      <div className="relative w-full max-w-110 mx-4 max-h-[85vh] overflow-y-auto rounded-2xl border border-zinc-800 shadow-2xl"
+      <div className="relative w-full max-w-110 mx-4 max-h-[85vh] overflow-y-auto rounded-2xl border border-zinc-800 shadow-2xl custom-scrollbar"
         style={{ backgroundColor: "#0B1120" }}
       >
         <div className="p-6">

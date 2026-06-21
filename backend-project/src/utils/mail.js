@@ -149,9 +149,3 @@ export {
   inviteTestEmail,
   welcomeEmailTemplate, // ← add this
 };
-export{
-    emailVerificationTemplate,
-    passwordResetTemplate,
-    emailSend,
-    inviteTestEmail
-}

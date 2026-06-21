@@ -26,4 +26,12 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.12) transparent;
 }
- 
+.edit-task-modal-body {
+  overflow-y: auto;      /* still scrollable */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge old */
+}
+
+.edit-task-modal-body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}

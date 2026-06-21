@@ -517,8 +517,11 @@ export default function MyTasks() {
               />
             ))}
           </div>
-
+                  <AnimatePresence>
           {showModal && (
+      
+              
+      
             <TaskModal
               status={newStatus}
               onClose={() => setShowModal(false)}
@@ -535,7 +538,10 @@ export default function MyTasks() {
                 }
               }}
             />
+              
+            
           )}
+          </AnimatePresence>
 
           {showEditModal && editingTask && (
             <EditTaskModal

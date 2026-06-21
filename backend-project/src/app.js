@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config({
     path: './.env'
 });
+
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
@@ -12,13 +13,6 @@ import { User } from './models/user.models.js'
 const app = express()
 
 
-
-// basic config of express app
-app.use(express.json({ limit: '10kb' }))
-app.use(express.urlencoded({ extended: true }))
-app.use(express.static('public'))
-app.use(cookieParser())
-
 //cors config
 app.use(cors({
     origin: process.env.CORS_ORIGIN?.split(',') || 'http://localhost:5173',
@@ -26,6 +20,13 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'PATCH' ,'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }))
+// basic config of express app
+app.use(express.json({ limit: '10kb' }))
+app.use(express.urlencoded({ extended: true }))
+app.use(express.static('public'))
+app.use(cookieParser())
+
+
 ///google auth
 app.use(session({
   secret: process.env.ACCESS_TOKEN_SECRET,

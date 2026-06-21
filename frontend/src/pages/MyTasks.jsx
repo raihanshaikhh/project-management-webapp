@@ -542,7 +542,7 @@ export default function MyTasks() {
             
           )}
           </AnimatePresence>
-
+          <AnimatePresence>
           {showEditModal && editingTask && (
             <EditTaskModal
               task={editingTask}
@@ -582,7 +582,7 @@ export default function MyTasks() {
               }}
             />
           )}
-
+          </AnimatePresence>
           {showMemberModal && activeProject && (
             <AddMemberModal
 

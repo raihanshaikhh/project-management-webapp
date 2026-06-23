@@ -6,6 +6,7 @@ import {
   removeWorkspaceMember,
   deleteWorkspaceApi,
   leaveWorkspaceApi,
+
 } from "../services/Api.js";
 import { getToken } from "../Routes/ProtectedRoutes.jsx";
 import  socket  from "../services/socket.js";
@@ -86,7 +87,20 @@ const loadWorkspace = async () => {
     await removeWorkspaceMember(userId);
     setMembers((prev) => prev.filter((m) => m.user._id !== userId));
   };
+const updateWorkspace = async (updatedData) => {
+  const res = await updateWorkspaceApi(updatedData);
 
+  const updatedWorkspace =
+    res.data?.data?.workspace || res.data?.workspace || res.data;
+
+  setWorkspace(updatedWorkspace);
+
+  if (updatedWorkspace?.members) {
+    setMembers(updatedWorkspace.members);
+  }
+
+
+};
   return (
     <WorkspaceContext.Provider
       value={{
@@ -100,6 +114,7 @@ const loadWorkspace = async () => {
         removeMember,
         leaveWorkspace,
         deleteWorkspace,
+        updateWorkspace,
       }}
     >
       {children}

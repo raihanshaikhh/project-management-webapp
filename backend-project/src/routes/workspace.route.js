@@ -7,6 +7,7 @@ import {
   getWorkspaceMembers,
   leaveWorkspace,
   deleteWorkspace,
+  updateWorkspace,
 } from "../controller/workspace.controller.js";
 import { verifyJWT } from "../middlewares/auth.midleware.js";
 
@@ -16,7 +17,8 @@ router.use(verifyJWT);
 router.route("/")
   .post(createWorkSpace)
   .get(getWorkspaceUser)
-  .delete(deleteWorkspace);   // ← admin deletes workspace
+  .patch(updateWorkspace)
+  .delete(deleteWorkspace); // ← admin deletes workspace
 
   
 router.route("/leave")

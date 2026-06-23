@@ -267,6 +267,89 @@ const getWorkspaceMembers = asyncHandler(async (req, res) => {
     new ApiResponse(200, members, "Members fetched successfully")
   );
 });
+const updateWorkspace = asyncHandler(async (req, res) => {
+  const { name, description } = req.body;
+
+  const membership = await WorkspaceMember.findOne({
+    user: req.user._id,
+    role: UserRolesEnum.ADMIN,
+  });
+
+  if (!membership) {
+    throw new ApiError(403, "Only admins can update the workspace");
+  }
+
+  const workspace = await Workspace.findById(membership.workspace);
+
+  if (!workspace) {
+    throw new ApiError(404, "Workspace not found");
+  }
+
+  if (name !== undefined) {
+    if (!name.trim()) {
+      throw new ApiError(400, "Workspace name cannot be empty");
+    }
+    workspace.name = name.trim();
+  }
+
+  if (description !== undefined) {
+    workspace.description = description.trim();
+  }
+
+  await workspace.save();
+
+  // return the same shape your frontend/context expects
+  const updatedWorkspace = await Workspace.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(workspace._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "workspacemembers",
+        localField: "_id",
+        foreignField: "workspace",
+        as: "members",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "user",
+              foreignField: "_id",
+              as: "user",
+              pipeline: [
+                {
+                  $project: {
+                    password: 0,
+                    refreshToken: 0,
+                  },
+                },
+              ],
+            },
+          },
+          { $unwind: "$user" },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        memberCount: { $size: "$members" },
+      },
+    },
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      { workspace: updatedWorkspace[0] },
+      "Workspace updated successfully"
+    )
+  );
+  console.log("update workspace hit");
+console.log("body:", req.body);
+console.log("user:", req.user?._id);
+});
 
 export {
   createWorkSpace,
@@ -276,4 +359,5 @@ export {
   inviteMember,
   removeMember,
   getWorkspaceMembers,
+  updateWorkspace,
 };

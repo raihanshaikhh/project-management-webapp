@@ -6,6 +6,7 @@ import {
   removeWorkspaceMember,
   deleteWorkspaceApi,
   leaveWorkspaceApi,
+  updateWorkspaceAPI,
 
 } from "../services/Api.js";
 import { getToken } from "../Routes/ProtectedRoutes.jsx";
@@ -39,7 +40,9 @@ const deleteWorkspace = async () => {
     if (!user?._id) return;
 
     socket.emit("joinUserRoom", user._id);
-
+    socket.on("connect", () => {
+    socket.emit("joinUserRoom", user._id); // re-join after reconnect
+  });
     socket.on("workspaceInvite", () => {
       loadWorkspace();
     });
@@ -87,24 +90,23 @@ const loadWorkspace = async () => {
     await removeWorkspaceMember(userId);
     setMembers((prev) => prev.filter((m) => m.user._id !== userId));
   };
-const updateWorkspace = async (updatedData) => {
-  const res = await updateWorkspaceApi(updatedData);
-
-  const updatedWorkspace =
-    res.data?.data?.workspace || res.data?.workspace || res.data;
-
-  setWorkspace(updatedWorkspace);
-
-  if (updatedWorkspace?.members) {
-    setMembers(updatedWorkspace.members);
+const updateWorkspace = async ({ name, description }) => {
+  try {
+    const res = await updateWorkspaceAPI({ name, description });
+    const updated = res.data.data.workspace; // same shape as fetchMyWorkspace
+    setWorkspace(updated);
+    setMembers(updated.members ?? []);
+    return { success: true };
+  } catch (err) {
+    const message = err.response?.data?.message || "Failed to update workspace";
+    return { success: false, message };
   }
-
-
 };
   return (
     <WorkspaceContext.Provider
       value={{
         workspace,
+        updateWorkspace,
         members,
         myRole,
         loading,
@@ -114,7 +116,7 @@ const updateWorkspace = async (updatedData) => {
         removeMember,
         leaveWorkspace,
         deleteWorkspace,
-        updateWorkspace,
+        
       }}
     >
       {children}

@@ -8,6 +8,8 @@ import mongoose from "mongoose";
 import { UserRolesEnum } from "../utils/costants.js";
 import { inviteTestEmail } from "../utils/mail.js";
 import {io} from "../index.js"
+import { Project } from "../models/project.model.js";
+import { ProjectMember } from "../models/projectMember.model.js";
 
 
 // ── GET /api/v1/workspace ─────────────────────────────────────────────────────
@@ -152,6 +154,18 @@ const inviteMember = asyncHandler(async (req, res) => {
     user: invitee._id,
     role,
   });
+    // 5. ✅ add to all existing projects in this workspace
+  const projects = await Project.find({ workspace: myMembership.workspace });
+  if (projects.length > 0) {
+    const projectMembers = projects.map((p) => ({
+      project: p._id,
+      user: invitee._id,
+      role: UserRolesEnum.MEMBER,
+    }));
+    await ProjectMember.insertMany(projectMembers, { ordered: false }).catch((err) => {
+      console.error("Project member insert error:", err.message);
+    });
+  }
   const io = req.app.get("io"); // ← get io from app (already set via app.set("io", io))
 io.to(`user:${invitee._id.toString()}`).emit("workspaceInvite", {
   workspaceId: myMembership.workspace,
@@ -267,9 +281,12 @@ const getWorkspaceMembers = asyncHandler(async (req, res) => {
     new ApiResponse(200, members, "Members fetched successfully")
   );
 });
+// controller/workspace.controller.js
+
 const updateWorkspace = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
 
+  // Find the user's admin membership
   const membership = await WorkspaceMember.findOne({
     user: req.user._id,
     role: UserRolesEnum.ADMIN,
@@ -298,13 +315,8 @@ const updateWorkspace = asyncHandler(async (req, res) => {
 
   await workspace.save();
 
-  // return the same shape your frontend/context expects
   const updatedWorkspace = await Workspace.aggregate([
-    {
-      $match: {
-        _id: new mongoose.Types.ObjectId(workspace._id),
-      },
-    },
+    { $match: { _id: new mongoose.Types.ObjectId(workspace._id) } },
     {
       $lookup: {
         from: "workspacemembers",
@@ -318,37 +330,19 @@ const updateWorkspace = asyncHandler(async (req, res) => {
               localField: "user",
               foreignField: "_id",
               as: "user",
-              pipeline: [
-                {
-                  $project: {
-                    password: 0,
-                    refreshToken: 0,
-                  },
-                },
-              ],
+              pipeline: [{ $project: { password: 0, refreshToken: 0 } }],
             },
           },
           { $unwind: "$user" },
         ],
       },
     },
-    {
-      $addFields: {
-        memberCount: { $size: "$members" },
-      },
-    },
+    { $addFields: { memberCount: { $size: "$members" } } },
   ]);
 
   return res.status(200).json(
-    new ApiResponse(
-      200,
-      { workspace: updatedWorkspace[0] },
-      "Workspace updated successfully"
-    )
+    new ApiResponse(200, { workspace: updatedWorkspace[0] }, "Workspace updated successfully")
   );
-  console.log("update workspace hit");
-console.log("body:", req.body);
-console.log("user:", req.user?._id);
 });
 
 export {

@@ -31,6 +31,7 @@ export default function Login({ form, onChange, onSwitch }) {
       localStorage.setItem("token", data.accessToken);
       localStorage.setItem("user", JSON.stringify(data.user));
       toast.success("Logged in");
+      
       navigate("/app/dashboard");
     } catch (err) {
       const message = err.response?.data?.message || "Login failed";

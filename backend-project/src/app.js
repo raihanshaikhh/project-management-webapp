@@ -15,11 +15,12 @@ const app = express()
 
 //cors config
 app.use(cors({
-    origin: process.env.CORS_ORIGIN?.split(',') || 'http://localhost:5173',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH' ,'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: ['http://localhost:5173', ...( process.env.CORS_ORIGIN?.split(',') || [])],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }))
+
 // basic config of express app
 app.use(express.json({ limit: '10kb' }))
 app.use(express.urlencoded({ extended: true }))

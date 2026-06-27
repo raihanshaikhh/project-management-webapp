@@ -113,26 +113,34 @@ if (!member) {
 
 const updateTasks = asyncHandler(async (req, res) => {
   const {
-    title,
-    description,
-    status,
-    priority,
-    dueDate,
-    assignedTo,
-    attachments,
-    links
+    title, description, status, priority,
+    dueDate, assignedTo, attachments, links
   } = req.body;
-
   const { taskId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(taskId)) {
     throw new ApiError(400, "Invalid Task Id");
   }
 
+  const task = await Task.findById(taskId);
+  if (!task) throw new ApiError(404, "Task not found");
 
+  // check membership in the project
+  const member = await ProjectMember.findOne({
+    project: task.project,
+    user: req.user._id,
+  });
+  if (!member) throw new ApiError(403, "You are not a member of this project");
 
-  // FIX 1: separate $set and $unset so that sending assignedTo: null
-  // actually clears the field in MongoDB instead of being silently ignored
+  const isAdmin = member.role === UserRolesEnum.ADMIN;
+  const isAssignee = task.assignedTo?.toString() === req.user._id.toString();
+  const isCreator = task.createdBy?.toString() === req.user._id.toString();
+
+  // members can only edit tasks assigned to them or created by them
+  if (!isAdmin && !isAssignee && !isCreator) {
+    throw new ApiError(403, "You don't have permission to edit this task");
+  }
+
   const $set = {};
   const $unset = {};
 
@@ -141,25 +149,18 @@ const updateTasks = asyncHandler(async (req, res) => {
   if (status !== undefined) $set.status = status;
   if (priority !== undefined) $set.priority = priority;
   if (attachments !== undefined) $set.attachments = attachments;
-
-  // FIX 2: removed the duplicate `links` assignment that appeared twice before
   if (links !== undefined) $set.links = links;
 
-  // FIX 3: dueDate — allow null to clear it too, same pattern as assignedTo
   if (dueDate !== undefined) {
-    if (dueDate === null || dueDate === "") {
-      $unset.dueDate = "";
-    } else {
-      $set.dueDate = dueDate;
-    }
+    if (dueDate === null || dueDate === "") $unset.dueDate = "";
+    else $set.dueDate = dueDate;
   }
 
-  // FIX 4: assignedTo — cast to ObjectId when present, $unset when null/""
-  // Previously `updateData.assignedTo = null` was passed into $set which
-  // Mongoose ignores for ObjectId ref fields, leaving old assignee intact
+  // only admins can reassign tasks
   if (assignedTo !== undefined) {
+    if (!isAdmin) throw new ApiError(403, "Only admins can reassign tasks");
     if (assignedTo === null || assignedTo === "") {
-      $unset.assignedTo = "";           // ← this is what actually clears it
+      $unset.assignedTo = "";
     } else {
       if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
         throw new ApiError(400, "Invalid assignedTo user Id");
@@ -168,43 +169,52 @@ const updateTasks = asyncHandler(async (req, res) => {
     }
   }
 
-  // Build the final modifier — only include $unset if there's something to unset
   const modifier = { $set };
   if (Object.keys($unset).length > 0) modifier.$unset = $unset;
 
-  const task = await Task.findByIdAndUpdate(
-    taskId,
-    modifier,
-    { new: true, runValidators: true }
-  ).populate("assignedTo", "username fullName avatar");
+  const updated = await Task.findByIdAndUpdate(taskId, modifier, {
+    new: true,
+    runValidators: true,
+  }).populate("assignedTo", "username fullName avatar");
 
   const io = req.app.get("io");
-  const projectId = String(task.project);
-  io.to(`project:${projectId}`).emit("taskUpdated", {
-    projectId,
-    task
+  io.to(`project:${String(updated.project)}`).emit("taskUpdated", {
+    projectId: String(updated.project),
+    task: updated,
   });
-  return res
-    .status(200)
-    .json(new ApiResponse(200, task, "Task updated successfully"));
+
+  return res.status(200).json(new ApiResponse(200, updated, "Task updated successfully"));
 });
 
 const deleteTasks = asyncHandler(async (req, res) => {
-  const { taskId } = req.params
+  const { taskId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(taskId)) throw new ApiError(400, "Invalid Task Id")
+  if (!mongoose.Types.ObjectId.isValid(taskId)) {
+    throw new ApiError(400, "Invalid Task Id");
+  }
 
-  const task = await Task.findById(taskId)
-  if (!task) throw new ApiError(404, "Task not found")
+  const task = await Task.findById(taskId);
+  if (!task) throw new ApiError(404, "Task not found");
 
+  // only admins and task creators can delete
+  const member = await ProjectMember.findOne({
+    project: task.project,
+    user: req.user._id,
+  });
+  if (!member) throw new ApiError(403, "You are not a member of this project");
 
+  const isAdmin = member.role === UserRolesEnum.ADMIN;
+  const isCreator = task.createdBy?.toString() === req.user._id.toString();
 
-  await Task.findByIdAndDelete(taskId)
+  if (!isAdmin && !isCreator) {
+    throw new ApiError(403, "Only admins or the task creator can delete this task");
+  }
 
-  await SubTask.deleteMany({ task: taskId })
+  await Task.findByIdAndDelete(taskId);
+  await SubTask.deleteMany({ task: taskId });
 
-  return res.status(200).json(new ApiResponse(200, task, "Task deleted successfully"))
-})
+  return res.status(200).json(new ApiResponse(200, task, "Task deleted successfully"));
+});
 
 const createSubTasks = asyncHandler(async (req, res) => {
   const { taskId } = req.params

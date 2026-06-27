@@ -11,6 +11,7 @@ export default function EditWorkspaceModal({ onClose }) {
         leaveWorkspace,
         deleteWorkspace,
     } = useWorkspace();
+    const isAdmin = myRole === "admin";  // ✅ add this
 
     const [name, setName] = useState(workspace?.name || "");
     const [description, setDescription] = useState(workspace?.description || "");
@@ -19,13 +20,9 @@ export default function EditWorkspaceModal({ onClose }) {
 
     const handleSave = async () => {
         if (!name.trim()) return toast.error("Workspace name is required");
-
         try {
             setLoading(true);
-            await updateWorkspace({
-                name: name.trim(),
-                description: description.trim(),
-            });
+            await updateWorkspace({ name: name.trim(), description: description.trim() });
             toast.success("Workspace updated");
             onClose();
         } catch (err) {
@@ -33,7 +30,6 @@ export default function EditWorkspaceModal({ onClose }) {
         } finally {
             setLoading(false);
         }
- 
     };
 
     const handleLeave = async () => {
@@ -76,13 +72,14 @@ export default function EditWorkspaceModal({ onClose }) {
                     <div className="flex items-center justify-between mb-5">
                         <div>
                             <h2 className="text-white font-semibold text-base">
-                                Edit Workspace
+                                {isAdmin ? "Edit Workspace" : "Workspace Info"}
                             </h2>
                             <p className="text-zinc-500 text-xs mt-0.5">
-                                Update workspace details and settings
+                                {isAdmin
+                                    ? "Update workspace details and settings"
+                                    : "You are a member of this workspace"}
                             </p>
                         </div>
-
                         <button
                             onClick={onClose}
                             className="text-zinc-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-zinc-800"
@@ -91,47 +88,60 @@ export default function EditWorkspaceModal({ onClose }) {
                         </button>
                     </div>
 
-                    {/* Form */}
+                    {/* Form — admin only, members see read-only */}
                     <div className="space-y-4">
                         <div>
                             <label className="block text-zinc-400 text-xs mb-2">
                                 Workspace name
                             </label>
-                            <input
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder="Workspace name"
-                                className="w-full bg-zinc-800 border border-zinc-700 focus:border-zinc-500 text-zinc-200 text-sm rounded-lg px-3 py-2 outline-none transition-colors"
-                            />
+                            {isAdmin ? (
+                                <input
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Workspace name"
+                                    className="w-full bg-zinc-800 border border-zinc-700 focus:border-zinc-500 text-zinc-200 text-sm rounded-lg px-3 py-2 outline-none transition-colors"
+                                />
+                            ) : (
+                                <p className="text-zinc-200 text-sm px-3 py-2 bg-zinc-800/50 rounded-lg">
+                                    {workspace?.name}
+                                </p>
+                            )}
                         </div>
 
                         <div>
                             <label className="block text-zinc-400 text-xs mb-2">
                                 Description
                             </label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                rows={4}
-                                placeholder="Describe this workspace..."
-                                className="w-full resize-none bg-zinc-800 border border-zinc-700 focus:border-zinc-500 text-zinc-200 text-sm rounded-lg px-3 py-2 outline-none transition-colors"
-                            />
+                            {isAdmin ? (
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    rows={4}
+                                    placeholder="Describe this workspace..."
+                                    className="w-full resize-none bg-zinc-800 border border-zinc-700 focus:border-zinc-500 text-zinc-200 text-sm rounded-lg px-3 py-2 outline-none transition-colors"
+                                />
+                            ) : (
+                                <p className="text-zinc-400 text-sm px-3 py-2 bg-zinc-800/50 rounded-lg min-h-[80px]">
+                                    {workspace?.description || "No description"}
+                                </p>
+                            )}
                         </div>
                     </div>
 
-                    {/* Save button */}
-                    {/* <button
-
-                        onClick={handleSave}
-                        disabled={loading || !name.trim()}
-                        className="w-full mt-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center"
-                    >
-                        {loading ? "Saving..." : "Save Changes"}
-                    </button> */}
+                    {/* Save button — admin only */}
+                    {isAdmin && (
+                        <button
+                            onClick={handleSave}
+                            disabled={loading || !name.trim()}
+                            className="w-full mt-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center"
+                        >
+                            {loading ? "Saving..." : "Save Changes"}
+                        </button>
+                    )}
 
                     {/* Footer */}
                     <div className="mt-5 pt-4 border-t border-zinc-800">
-                        {myRole === "admin" ? (
+                        {isAdmin ? (
                             confirmDelete ? (
                                 <div className="flex items-center gap-2">
                                     <span className="text-zinc-500 text-xs">

@@ -28,7 +28,11 @@ export const inviteWorkspaceMember = (email, role = "member") =>
   API.post("/workspace/invite", { email, role });
 export const removeWorkspaceMember = (userId) =>
   API.delete(`/workspace/members/${userId}`);
-export const updateWorkspaceApi = (data) => API.patch("/workspace", data);
+// api/workspace.api.js (or wherever you keep API calls)
+
+// ✅ correct — use API
+export const updateWorkspaceAPI = ({ name, description }) =>
+  API.patch("/workspace", { name, description });
 
 // ── Project API calls ──────────────────────────────────
 export const fetchProjects = (workspaceId) =>   API.get(`/projects/workspace/${workspaceId}`);
